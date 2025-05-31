@@ -30,7 +30,11 @@ const messagePatch: NavContextMenuPatchCallback = (children, { message }) => {
             label="Quote"
             icon={QuoteIcon}
             action={async () => {
-                openModal(props => <QuoteModal {...props} />);
+                if (settings.store.autoSendQuote) {
+                    await SendInChat(() => { });
+                } else {
+                    openModal(props => <QuoteModal {...props} />);
+                }
             }}
         />;
 
@@ -65,6 +69,11 @@ const settings = definePluginSettings({
             { label: "Username", value: userIDOptions.userName },
             { label: "User ID", value: userIDOptions.userId }
         ]
+    },
+    autoSendQuote: {
+        type: OptionType.BOOLEAN,
+        description: "Automatically send the quote when clicking the quote button",
+        default: false
     }
 });
 
@@ -187,7 +196,7 @@ function registerStyleChange(style) {
 }
 
 function QuoteModal(props: ModalProps) {
-    const [gray, setGray] = useState(true);
+    const [gray, setGray] = useState(false); // Default to false (disabled)
     useEffect(() => {
         grayscale = gray;
         GeneratePreview();
