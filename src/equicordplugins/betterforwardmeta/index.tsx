@@ -28,7 +28,6 @@ export default definePlugin({
                         guild_id !== SelectedGuildStore.getGuildId() && <Popout
                             position="top"
                             renderPopout={() => <ServerProfileComponent guildId={guild_id} />}
-                            targetElementRef={{} as any} // Add ref to satisfy type checking
                         >
                             {popoutProps => <div className={cl("footer-element")} {...popoutProps}>
                                 {
