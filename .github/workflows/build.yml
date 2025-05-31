@@ -65,6 +65,11 @@ jobs:
                   rm release/package.json
                   rm release/*.map
 
+            - name: Create Release (if not exists)
+              if: ${{ github.ref_name == 'main' }}
+              run: |
+                  gh release view latest || gh release create latest --title "Latest Release" --notes "Auto-generated release"
+
             - name: Upload Equicord Stable
               if: ${{ github.ref_name == 'main' }}
               run: |
