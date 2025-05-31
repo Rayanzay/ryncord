@@ -85,30 +85,29 @@ function SettingsComponent() {
 }
 
 export const settings = definePluginSettings({
-    dontShowForBots: {
-        description: "Don't show extra tags for bots (excluding webhooks)",
-        type: OptionType.BOOLEAN,
-        default: false
-    },
-    dontShowBotTag: {
-        description: "Only show extra tags for bots / Hide [APP] text",
-        type: OptionType.BOOLEAN,
-        default: false,
-        restartNeeded: true
-    },
-    tagSettings: {
-        type: OptionType.COMPONENT,
-        component: SettingsComponent,
-        description: "fill me"
-    },
     specialUsers: {
         type: OptionType.STRING,
-        description: "List of special user IDs (comma separated)",
-        default: "878151241769820173",
+        description: "Special users (comma-separated user IDs)",
+        default: ""
     },
     specialTag: {
         type: OptionType.STRING,
-        description: "Text to display for special users",
-        default: "Special",
+        description: "Tag for special users",
+        default: "SPECIAL"
+    },
+    dontShowBotTag: {
+        type: OptionType.BOOLEAN,
+        description: "Don't show bot tag",
+        default: false
+    },
+    dontShowForBots: {
+        type: OptionType.BOOLEAN,
+        description: "Don't show tags for bots",
+        default: false
+    },
+    tagSettings: {
+        type: OptionType.COMPONENT,
+        description: "Tag Settings",
+        component: SettingsComponent
     }
 });
