@@ -36,8 +36,8 @@ export const settings = definePluginSettings({
 });
 
 export default definePlugin({
-    name: "Anammox",
-    description: "A microbial process that plays an important part in the nitrogen cycle",
+    name: "RemoveCrap",
+    description: "Remove Discord's bloatware from your client.",
     authors: [Devs.Kyuuhachi],
     settings,
 
