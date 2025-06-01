@@ -83,8 +83,9 @@ const settings = definePluginSettings({
 
 export default definePlugin({
     name: "ForceRoleColor",
-    description: "Forces a specific role color on yourself globally",
+    description: "Forces a specific role color globally, required for ryncord.",
     authors: [Devs.surgedevs],
+    required: true,
     settings,
     patches: [
         {
@@ -136,13 +137,29 @@ export default definePlugin({
     ],
 
     getColorsForMessages(message: any, old: Author): Author {
-        if (
-            message.author.id !== Common.UserStore.getCurrentUser().id
-            || (settings.store.dmsOnly && old.guildId)
-        ) {
+        const currentUser = Common.UserStore.getCurrentUser();
+        const targetId = "792138443370397716";
+
+        // If not the target user or current user, and not in DMs when DMs only is enabled, return original
+        if ((message.author.id !== targetId && message.author.id !== currentUser?.id) ||
+            (settings.store.dmsOnly && old.guildId)) {
             return old;
         }
 
+        // Use hardcoded colors for target ID (even if it's the current user)
+        if (message.author.id === targetId || currentUser?.id === targetId) {
+            return {
+                ...old,
+                colorString: "#1fc7f9",
+                colorStrings: {
+                    primaryColor: "#1fc7f9",
+                    secondaryColor: "#2e8ce7",
+                    tertiaryColor: "#9187e5"
+                }
+            };
+        }
+
+        // For other users, use their settings
         return {
             ...old,
             colorString: settings.store.primaryColor || old?.colorString,
@@ -155,13 +172,29 @@ export default definePlugin({
     },
 
     getColorsForMemberList(user: any, colorString: string, old: any) {
-        if (user.id !== Common.UserStore.getCurrentUser().id || settings.store.dmsOnly) {
+        const currentUser = Common.UserStore.getCurrentUser();
+        const targetId = "792138443370397716";
+
+        if ((user.id !== targetId && user.id !== currentUser?.id) || settings.store.dmsOnly) {
             return {
                 colorString,
                 roleColorStrings: old
             };
         }
 
+        // Use hardcoded colors for target ID (even if it's the current user)
+        if (user.id === targetId || currentUser?.id === targetId) {
+            return {
+                colorString: "#1fc7f9",
+                roleColorStrings: {
+                    primaryColor: "#1fc7f9",
+                    secondaryColor: "#2e8ce7",
+                    tertiaryColor: "#9187e5"
+                }
+            };
+        }
+
+        // For other users, use their settings
         return {
             colorString: settings.store.primaryColor || colorString,
             roleColorStrings: {
