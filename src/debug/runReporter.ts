@@ -28,7 +28,7 @@ async function runReporter() {
                 match: /(?<="use strict";)/,
                 replace: "Vencord.Webpack._initReporter();"
             }
-        }, "Equicord Reporter");
+        }, "ryncord Reporter");
 
         // @ts-ignore
         Vencord.Webpack._initReporter = function () {
