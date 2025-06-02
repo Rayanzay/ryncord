@@ -86,12 +86,12 @@ export default definePlugin({
         return [
             {
                 section: SectionTypes.HEADER,
-                label: "Equicord",
+                label: "ryncord",
                 className: "vc-settings-header"
             },
             {
                 section: "EquicordSettings",
-                label: "Equicord",
+                label: "ryncord",
                 searchableTitles: ["Equicord", "Settings", "Equicord Settings"],
                 element: VencordTab,
                 className: "vc-settings"
@@ -119,7 +119,7 @@ export default definePlugin({
             },
             {
                 section: "EquicordCloud",
-                label: "Cloud",
+                label: "Vencord Cloud",
                 searchableTitles: ["Cloud"],
                 element: CloudTab,
                 className: "vc-cloud"
