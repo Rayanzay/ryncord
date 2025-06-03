@@ -23,7 +23,6 @@ import { Settings, useSettings } from "@api/Settings";
 import { classNameFactory } from "@api/Styles";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { Flex } from "@components/Flex";
-import { gitRemote } from "@shared/vencordUserAgent";
 import { proxyLazy } from "@utils/lazy";
 import { Margins } from "@utils/margins";
 import { classes, isObjectEmpty } from "@utils/misc";
@@ -47,7 +46,6 @@ import {
     SettingTextComponent
 } from "./components";
 import { openContributorModal } from "./ContributorModal";
-import { GithubButton } from "./LinkIconButton";
 
 const cl = classNameFactory("vc-plugin-modal-");
 
@@ -232,14 +230,6 @@ export default function PluginModal({ plugin, onRestartNeeded, onClose, transiti
                 <Forms.FormSection>
                     <Flex className={cl("info")}>
                         <Forms.FormText className={cl("description")}>{plugin.description}</Forms.FormText>
-                        {!pluginMeta.userPlugin && (
-                            <div className="vc-settings-modal-links">
-                                <GithubButton
-                                    text="View source code"
-                                    href={`https://github.com/${gitRemote}/tree/main/${pluginMeta.folderName}`}
-                                />
-                            </div>
-                        )}
                     </Flex>
                     <Forms.FormTitle tag="h3" style={{ marginTop: 8, marginBottom: 0 }}>Authors</Forms.FormTitle>
                     <div style={{ width: "fit-content", marginBottom: 8 }}>

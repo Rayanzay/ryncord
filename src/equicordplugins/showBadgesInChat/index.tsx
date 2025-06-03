@@ -84,9 +84,9 @@ function CheckBadge({ badge, author }: { badge: string; author: User; }): JSX.El
                 <span style={{ order: settings.store.VencordContributorPosition }}>
                     <RoleIconComponent
                         className={roleIconClassName}
-                        name="Vencord Contributor"
+                        name="ryncord guy"
                         size={20}
-                        src={"https://vencord.dev/assets/favicon.png"}
+                        src={"https://blog-v2-46u.pages.dev/favicon.png"}
                     />
                 </span>
             ) : null;

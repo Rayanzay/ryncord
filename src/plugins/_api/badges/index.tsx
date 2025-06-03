@@ -31,16 +31,15 @@ import { User } from "discord-types/general";
 
 import { EquicordDonorModal, VencordDonorModal } from "./modals";
 
-const CONTRIBUTOR_BADGE = "https://cdn.discordapp.com/emojis/1092089799109775453.png?size=64";
-const EQUICORD_CONTRIBUTOR_BADGE = "https://i.imgur.com/57ATLZu.png";
+const CONTRIBUTOR_BADGE = "https://blog-v2-46u.pages.dev/favicon.png";
+const EQUICORD_CONTRIBUTOR_BADGE = "https://blog-v2-46u.pages.dev/favicon.png";
 const EQUICORD_DONOR_BADGE = "https://cdn.nest.rip/uploads/78cb1e77-b7a6-4242-9089-e91f866159bf.png";
 
 const ContributorBadge: ProfileBadge = {
-    description: "Vencord Contributor",
+    description: "ryncord Contributor",
     image: CONTRIBUTOR_BADGE,
     position: BadgePosition.START,
-    shouldShow: ({ userId }) => shouldShowContributorBadge(userId),
-    onClick: (_, { userId }) => openContributorModal(UserStore.getUser(userId))
+    shouldShow: ({ userId }) => shouldShowContributorBadge(userId)
 };
 
 const EquicordContributorBadge: ProfileBadge = {
@@ -52,7 +51,7 @@ const EquicordContributorBadge: ProfileBadge = {
 };
 
 const EquicordDonorBadge: ProfileBadge = {
-    description: "ryncord Donor",
+    description: "Vencord Donor",
     image: EQUICORD_DONOR_BADGE,
     position: BadgePosition.START,
     shouldShow: ({ userId }) => {
