@@ -58,10 +58,6 @@ const MOYAI_URL = "https://github.com/Equicord/Equibored/raw/main/sounds/moyai/m
 const MOYAI_URL_HD = "https://github.com/Equicord/Equibored/raw/main/sounds/moyai/moyai.wav";
 const MOYAI_URL_ULTRA = "https://pub-e77fd37d275f481896833bda931f1d70.r2.dev/moyai.WAV";
 const MOYAI_URL_ULTRA_HD = "https://pub-e77fd37d275f481896833bda931f1d70.r2.dev/moyai.WAV";
-const DUCK_URL = "https://pub-e77fd37d275f481896833bda931f1d70.r2.dev/moyai.WAV";
-const DUCK_URL_HD = "https://pub-e77fd37d275f481896833bda931f1d70.r2.dev/moyai.WAV";
-const DUCK_URL_ULTRA = "https://pub-e77fd37d275f481896833bda931f1d70.r2.dev/moyai.WAV";
-const DUCK_URL_ULTRA_HD = "https://pub-e77fd37d275f481896833bda931f1d70.r2.dev/moyai.WAV";
 
 const settings = definePluginSettings({
     volume: {
@@ -196,14 +192,9 @@ function boom(isDuck = false) {
     if (!settings.store.triggerWhenUnfocused && !document.hasFocus()) return;
     const audioElement = document.createElement("audio");
 
-    // Use the same quality/ultra logic for both moyai and duck sounds
     audioElement.src = settings.store.ultraMode
-        ? (settings.store.quality === "HD"
-            ? (isDuck ? DUCK_URL_ULTRA_HD : MOYAI_URL_ULTRA_HD)
-            : (isDuck ? DUCK_URL_ULTRA : MOYAI_URL_ULTRA))
-        : (settings.store.quality === "HD"
-            ? (isDuck ? DUCK_URL_HD : MOYAI_URL_HD)
-            : (isDuck ? DUCK_URL : MOYAI_URL));
+        ? (settings.store.quality === "HD" ? MOYAI_URL_ULTRA_HD : MOYAI_URL_ULTRA)
+        : (settings.store.quality === "HD" ? MOYAI_URL_HD : MOYAI_URL);
 
     audioElement.volume = settings.store.volume;
     audioElement.play();
