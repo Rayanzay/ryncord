@@ -52,6 +52,7 @@ interface IVoiceChannelEffectSendEvent {
 }
 
 const MOYAI = "🗿";
+const TIE = "👔";
 const MOYAI_URL = "https://github.com/Equicord/Equibored/raw/main/sounds/moyai/moyai.mp3";
 const MOYAI_URL_HD = "https://github.com/Equicord/Equibored/raw/main/sounds/moyai/moyai.wav";
 const MOYAI_URL_ULTRA = "https://pub-e77fd37d275f481896833bda931f1d70.r2.dev/moyai.WAV";
@@ -111,9 +112,10 @@ export default definePlugin({
             if (channelId !== SelectedChannelStore.getChannelId()) return;
 
             const moyaiCount = getMoyaiCount(message.content);
+            const hasTie = message.content.includes(TIE);
 
             for (let i = 0; i < moyaiCount; i++) {
-                boom();
+                boom(hasTie);
                 await sleep(300);
             }
         },
@@ -125,17 +127,17 @@ export default definePlugin({
             if (channelId !== SelectedChannelStore.getChannelId()) return;
 
             const name = emoji.name.toLowerCase();
-            if (name !== MOYAI && !name.includes("moyai") && !name.includes("moai")) return;
+            if (name !== MOYAI && !name.includes("moyai") && !name.includes("moai") && name !== TIE.toLowerCase()) return;
 
-            boom();
+            boom(name === TIE.toLowerCase());
         },
 
         VOICE_CHANNEL_EFFECT_SEND({ emoji }: IVoiceChannelEffectSendEvent) {
             if (!emoji?.name) return;
             const name = emoji.name.toLowerCase();
-            if (name !== MOYAI && !name.includes("moyai") && !name.includes("moai")) return;
+            if (name !== MOYAI && !name.includes("moyai") && !name.includes("moai") && name !== TIE.toLowerCase()) return;
 
-            boom();
+            boom(name === TIE.toLowerCase());
         }
     }
 });
@@ -169,11 +171,11 @@ function getMoyaiCount(message: string) {
     return Math.min(count, 10);
 }
 
-function boom() {
+function boom(forcedUltra = false) {
     if (!settings.store.triggerWhenUnfocused && !document.hasFocus()) return;
     const audioElement = document.createElement("audio");
 
-    audioElement.src = settings.store.ultraMode
+    audioElement.src = (forcedUltra || settings.store.ultraMode)
         ? (settings.store.quality === "HD" ? MOYAI_URL_ULTRA_HD : MOYAI_URL_ULTRA)
         : (settings.store.quality === "HD" ? MOYAI_URL_HD : MOYAI_URL);
 
