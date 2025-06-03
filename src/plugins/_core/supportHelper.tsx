@@ -18,43 +18,25 @@
 
 import { definePluginSettings } from "@api/Settings";
 import { getUserSettingLazy } from "@api/UserSettings";
-import ErrorBoundary from "@components/ErrorBoundary";
-import { Flex } from "@components/Flex";
-import { Link } from "@components/Link";
-import { openUpdaterModal } from "@components/VencordSettings/UpdaterTab";
-import { CONTRIB_ROLE_ID, Devs, DONOR_ROLE_ID, EQUCORD_HELPERS, EQUIBOP_CONTRIB_ROLE_ID, EQUICORD_TEAM, GUILD_ID, SUPPORT_CHANNEL_ID, VC_CONTRIB_ROLE_ID, VC_DONOR_ROLE_ID, VC_GUILD_ID, VC_REGULAR_ROLE_ID, VC_SUPPORT_CHANNEL_ID, VENCORD_CONTRIB_ROLE_ID } from "@utils/constants";
+import { Devs, EQUCORD_HELPERS, GUILD_ID, SUPPORT_CHANNEL_ID } from "@utils/constants";
 import { sendMessage } from "@utils/discord";
 import { Logger } from "@utils/Logger";
 import { Margins } from "@utils/margins";
-import { isEquicordPluginDev, isPluginDev, tryOrElse } from "@utils/misc";
+import { tryOrElse } from "@utils/misc";
 import { relaunch } from "@utils/native";
 import { onlyOnce } from "@utils/onlyOnce";
 import { makeCodeblock } from "@utils/text";
 import definePlugin from "@utils/types";
-import { checkForUpdates, isOutdated, update } from "@utils/updater";
-import { Alerts, Button, Card, ChannelStore, Forms, GuildMemberStore, Parser, PermissionsBits, PermissionStore, RelationshipStore, showToast, Text, Toasts, UserStore } from "@webpack/common";
-import { JSX } from "react";
+import { checkForUpdates, update } from "@utils/updater";
+import { Button, GuildMemberStore, PermissionsBits, PermissionStore, showToast, Toasts } from "@webpack/common";
+import { type ReactElement } from "react";
 
 import gitHash from "~git-hash";
 import plugins, { PluginMeta } from "~plugins";
 
 import SettingsPlugin from "./settings";
 
-const CodeBlockRe = /```js\n(.+?)```/s;
-
-const TrustedRolesIds = [
-    VC_CONTRIB_ROLE_ID, // Vencord Contributor
-    VC_REGULAR_ROLE_ID, // Vencord Regular
-    VC_DONOR_ROLE_ID, // Vencord Donor
-    EQUICORD_TEAM, // Equicord Team
-    DONOR_ROLE_ID, // Equicord Donor
-    CONTRIB_ROLE_ID, // Equicord Contributor
-    EQUIBOP_CONTRIB_ROLE_ID, // Equibop Contributor
-    VENCORD_CONTRIB_ROLE_ID, // Vencord Contributor
-];
-
 const AsyncFunction = async function () { }.constructor;
-
 const ShowCurrentGame = getUserSettingLazy<boolean>("status", "showCurrentGame")!;
 
 async function forceUpdate() {
@@ -63,7 +45,6 @@ async function forceUpdate() {
         await update();
         relaunch();
     }
-
     return outdated;
 }
 
@@ -75,14 +56,12 @@ async function generateDebugInfoMessage() {
         if (IS_VESKTOP) return `Vesktop v${VesktopNative.app.getVersion()}`;
         if (IS_EQUIBOP) return `Equibop v${VesktopNative.app.getVersion()}`;
         if ("legcord" in window) return `LegCord v${window.legcord.version}`;
-
-        // @ts-expect-error
-        const name = typeof unsafeWindow !== "undefined" ? "UserScript" : "Web";
+        const name = "Web";
         return `${name} (${navigator.userAgent})`;
     })();
 
     const info = {
-        Equicord:
+        ryncord:
             `v${VERSION} • [${gitHash}](<https://github.com/Rayanzay/ryncord/commit/${gitHash}>)` +
             `${SettingsPlugin.additionalInfo} - ${Intl.DateTimeFormat("en-GB", { dateStyle: "medium" }).format(BUILD_TIMESTAMP)}`,
         Client: `${RELEASE_CHANNEL} ~ ${client}`,
@@ -100,7 +79,6 @@ async function generateDebugInfoMessage() {
     const commonIssues = {
         "NoRPC enabled": Vencord.Plugins.isPluginEnabled("NoRPC"),
         "Activity Sharing disabled": tryOrElse(() => !ShowCurrentGame.getSetting(), false),
-        "Equicord DevBuild": !IS_STANDALONE,
         "Has UserPlugins": Object.values(PluginMeta).some(m => m.userPlugin),
         "More than two weeks out of date": BUILD_TIMESTAMP < Date.now() - 12096e5,
     };
@@ -122,71 +100,34 @@ function generatePluginList() {
     const enabledStockPlugins = enabledPlugins.filter(p => !PluginMeta[p].userPlugin);
     const enabledUserPlugins = enabledPlugins.filter(p => PluginMeta[p].userPlugin);
 
-
     let content = `**Enabled Plugins (${enabledStockPlugins.length}):**\n${makeCodeblock(enabledStockPlugins.join(", "))}`;
 
     if (enabledUserPlugins.length) {
         content += `**Enabled UserPlugins (${enabledUserPlugins.length}):**\n${makeCodeblock(enabledUserPlugins.join(", "))}`;
     }
 
-    if (enabledPlugins.length > 100 && !(isPluginDev(UserStore.getCurrentUser()?.id) || isEquicordPluginDev(UserStore.getCurrentUser()?.id))) {
-        return Alerts.show({
-            title: "You are attempting to get support!",
-            body: <div>
-                <style>
-                    {'[class*="backdrop_"][style*="backdrop-filter"]{backdrop-filter:blur(16px) brightness(0.25) !important;}'}
-                </style>
-                <img src="https://media.tenor.com/QtGqjwBpRzwAAAAi/wumpus-dancing.gif" />
-                <Forms.FormText>Before you ask for help,</Forms.FormText>
-                <Forms.FormText>We do not handle support for users who use 100+ plugins</Forms.FormText>
-                <Forms.FormText>issue could be plugin confliction</Forms.FormText>
-                <Forms.FormText>try removing some plugins and see if it fixes!</Forms.FormText>
-            </div>,
-            cancelText: "Okay continue"
-        });
-    }
-
     return content;
 }
 
 const checkForUpdatesOnce = onlyOnce(checkForUpdates);
-
-const settings = definePluginSettings({}).withPrivateSettings<{
-    dismissedDevBuildWarning?: boolean;
-}>();
-
-let clicked = false;
+const settings = definePluginSettings({});
 
 export default definePlugin({
     name: "SupportHelper",
-    required: true,
     description: "Helps us provide support to you",
     authors: [Devs.Ven],
-    dependencies: ["UserSettingsAPI"],
-
-    settings,
-
-    patches: [{
-        find: "#{intl::BEGINNING_DM}",
-        replacement: {
-            match: /#{intl::BEGINNING_DM},{.+?}\),(?=.{0,300}(\i)\.isMultiUserDM)/,
-            replace: "$& $self.renderContributorDmWarningCard({ channel: $1 }),"
-        }
-    }],
+    required: true,
+    dependencies: ["UserSettingDefinitions"],
 
     commands: [
         {
-            name: "equicord-debug",
-            description: "Send Equicord debug info",
-            // @ts-ignore
-            predicate: ctx => isPluginDev(UserStore.getCurrentUser()?.id) || isEquicordPluginDev(UserStore.getCurrentUser()?.id) || GUILD_ID === ctx?.guild?.id,
+            name: "ryncord-debug",
+            description: "Send ryncord debug info",
             execute: async () => ({ content: await generateDebugInfoMessage() })
         },
         {
-            name: "equicord-plugins",
-            description: "Send Equicord plugin list",
-            // @ts-ignore
-            predicate: ctx => isPluginDev(UserStore.getCurrentUser()?.id) || isEquicordPluginDev(UserStore.getCurrentUser()?.id) || GUILD_ID === ctx?.guild?.id,
+            name: "ryncord-plugins",
+            description: "Send ryncord plugin list",
             execute: () => {
                 const pluginList = generatePluginList();
                 return { content: typeof pluginList === "string" ? pluginList : "Unable to generate plugin list." };
@@ -195,100 +136,22 @@ export default definePlugin({
     ],
 
     flux: {
-        async CHANNEL_SELECT({ channelId }) {
-            const isSupportChannel = channelId === SUPPORT_CHANNEL_ID;
-            if (!isSupportChannel) return;
-
-            const selfId = UserStore.getCurrentUser()?.id;
-            if (!selfId || isPluginDev(selfId) || isEquicordPluginDev(selfId)) return;
-            if (channelId === VC_SUPPORT_CHANNEL_ID && Vencord.Plugins.isPluginEnabled("VCSupport") && !clicked) {
-                clicked = true;
-                return Alerts.show({
-                    title: "You are entering the support channel!",
-                    body: <div>
-                        <style>
-                            {'[class*="backdrop_"][style*="backdrop-filter"]{backdrop-filter:blur(16px) brightness(0.25) !important;}'}
-                        </style>
-                        <img src="https://media.tenor.com/QtGqjwBpRzwAAAAi/wumpus-dancing.gif" />
-                        <Forms.FormText>Before you ask for help,</Forms.FormText>
-                        <Forms.FormText>Check for updates and if this</Forms.FormText>
-                        <Forms.FormText>issue could be caused by Equicord!</Forms.FormText>
-                    </div>,
-                    confirmText: "Go to Equicord Support",
-                    cancelText: "Okay continue",
-                    onConfirm: () => VencordNative.native.openExternal("https://discord.gg/5Xh2W87egW"),
-                });
-            }
-
+        async CHANNEL_SELECT() {
             if (!IS_UPDATER_DISABLED) {
                 await checkForUpdatesOnce().catch(() => { });
-
-                if (isOutdated) {
-                    return Alerts.show({
-                        title: "Hold on!",
-                        body: <div>
-                            <Forms.FormText>You are using an outdated version of Equicord! Chances are, your issue is already fixed.</Forms.FormText>
-                            <Forms.FormText className={Margins.top8}>
-                                Please first update before asking for support!
-                            </Forms.FormText>
-                        </div>,
-                        onCancel: () => openUpdaterModal!(),
-                        cancelText: "View Updates",
-                        confirmText: "Update & Restart Now",
-                        onConfirm: forceUpdate,
-                        secondaryConfirmText: "I know what I'm doing or I can't update"
-                    });
-                }
-            }
-
-            // @ts-ignore outdated type
-            const roles = GuildMemberStore.getSelfMember(VC_GUILD_ID)?.roles || GuildMemberStore.getSelfMember(GUILD_ID)?.roles;
-            if (!roles || TrustedRolesIds.some(id => roles.includes(id))) return;
-
-            if (!IS_WEB && IS_UPDATER_DISABLED) {
-                return Alerts.show({
-                    title: "Hold on!",
-                    body: <div>
-                        <Forms.FormText>You are using an externally updated Equicord version, the ability to help you here may be limited.</Forms.FormText>
-                        <Forms.FormText className={Margins.top8}>
-                            Please join the <Link href="https://discord.gg/5Xh2W87egW">Equicord Server</Link> for support,
-                            or if this issue persists on Vencord, continue on.
-                        </Forms.FormText>
-                    </div>
-                });
-            }
-
-            if (!IS_STANDALONE && !settings.store.dismissedDevBuildWarning) {
-                return Alerts.show({
-                    title: "Hold on!",
-                    body: <div>
-                        <Forms.FormText>You are using a custom build of Equicord, which we do not provide support for!</Forms.FormText>
-
-                        <Forms.FormText className={Margins.top8}>
-                            We only provide support for <Link href="https://github.com/Rayanzay/ryncord">official builds</Link>.
-                            Either <Link href="https://github.com/Rayanzay/rynstaller">switch to an official build</Link> or figure your issue out yourself.
-                        </Forms.FormText>
-
-                        <Text variant="text-md/bold" className={Margins.top8}>You will be banned from receiving support if you ignore this rule.</Text>
-                    </div>,
-                    confirmText: "Understood",
-                    secondaryConfirmText: "Don't show again",
-                    onConfirmSecondary: () => settings.store.dismissedDevBuildWarning = true
-                });
             }
         }
     },
 
-    renderMessageAccessory(props) {
-        const buttons = [] as JSX.Element[];
+    renderMessageAccessory(props): ReactElement | null {
+        const buttons = [] as ReactElement[];
 
         const equicordSupport = GuildMemberStore.getMember(GUILD_ID, props.message.author.id)?.roles?.includes(EQUCORD_HELPERS);
 
         const shouldAddUpdateButton =
             !IS_UPDATER_DISABLED
-            && (
-                (props.channel.id === SUPPORT_CHANNEL_ID && equicordSupport)
-            )
+            && props.channel.id === SUPPORT_CHANNEL_ID
+            && equicordSupport
             && props.message.content?.includes("update");
 
         if (shouldAddUpdateButton) {
@@ -303,7 +166,7 @@ export default definePlugin({
                             else
                                 showToast("Already up to date!", Toasts.Type.MESSAGE);
                         } catch (e) {
-                            new Logger(this.name).error("Error while updating:", e);
+                            new Logger("SupportHelper").error("Error while updating:", e);
                             showToast("Failed to update :(", Toasts.Type.FAILURE);
                         }
                     }}
@@ -314,13 +177,13 @@ export default definePlugin({
         }
 
         if (props.channel.id === SUPPORT_CHANNEL_ID && PermissionStore.can(PermissionsBits.SEND_MESSAGES, props.channel)) {
-            if (props.message.content.includes("/equicord-debug") || props.message.content.includes("/equicord-plugins")) {
+            if (props.message.content.includes("/ryncord-debug") || props.message.content.includes("/ryncord-plugins")) {
                 buttons.push(
                     <Button
                         key="vc-dbg"
                         onClick={async () => sendMessage(props.channel.id, { content: await generateDebugInfoMessage() })}
                     >
-                        Run /equicord-debug
+                        Run /ryncord-debug
                     </Button>,
                     <Button
                         key="vc-plg-list"
@@ -331,51 +194,12 @@ export default definePlugin({
                             }
                         }}
                     >
-                        Run /equicord-plugins
+                        Run /ryncord-plugins
                     </Button>
                 );
             }
-
-            if (equicordSupport) {
-                const match = CodeBlockRe.exec(props.message.content || props.message.embeds[0]?.rawDescription || "");
-                if (match) {
-                    buttons.push(
-                        <Button
-                            key="vc-run-snippet"
-                            onClick={async () => {
-                                try {
-                                    await AsyncFunction(match[1])();
-                                    showToast("Success!", Toasts.Type.SUCCESS);
-                                } catch (e) {
-                                    new Logger(this.name).error("Error while running snippet:", e);
-                                    showToast("Failed to run snippet :(", Toasts.Type.FAILURE);
-                                }
-                            }}
-                        >
-                            Run Snippet
-                        </Button>
-                    );
-                }
-            }
         }
 
-        return buttons.length
-            ? <Flex>{buttons}</Flex>
-            : null;
-    },
-
-    renderContributorDmWarningCard: ErrorBoundary.wrap(({ channel }) => {
-        const userId = channel.getRecipientId();
-        if (!isPluginDev(userId) || !isEquicordPluginDev(userId)) return null;
-        if (RelationshipStore.isFriend(userId) || isPluginDev(UserStore.getCurrentUser()?.id) || isEquicordPluginDev(UserStore.getCurrentUser()?.id)) return null;
-
-        return (
-            <Card className={`vc-plugins-restart-card ${Margins.top8}`}>
-                Please do not private message plugin developers for support!
-                <br />
-                Instead, use the support channel: {Parser.parse("https://discord.com/channels/1173279886065029291/1173342942858055721")}
-                {!ChannelStore.getChannel(SUPPORT_CHANNEL_ID) && " (Click the link to join)"}
-            </Card>
-        );
-    }, { noop: true }),
+        return buttons.length ? <div className={Margins.top8}>{buttons}</div> : null;
+    }
 });
