@@ -54,6 +54,8 @@ interface IVoiceChannelEffectSendEvent {
 const MOYAI = "🗿";
 const MOYAI_URL = "https://github.com/Equicord/Equibored/raw/main/sounds/moyai/moyai.mp3";
 const MOYAI_URL_HD = "https://github.com/Equicord/Equibored/raw/main/sounds/moyai/moyai.wav";
+const MOYAI_URL_ULTRA = "https://pub-e77fd37d275f481896833bda931f1d70.r2.dev/moyai.WAV";
+const MOYAI_URL_ULTRA_HD = "https://pub-e77fd37d275f481896833bda931f1d70.r2.dev/moyai.WAV";
 
 const settings = definePluginSettings({
     volume: {
@@ -76,6 +78,11 @@ const settings = definePluginSettings({
         type: OptionType.BOOLEAN,
         default: true
     },
+    ultraMode: {
+        description: "ryncord's special 🗿 feature!!",
+        type: OptionType.BOOLEAN,
+        default: true
+    },
     ignoreBots: {
         description: "Ignore bots",
         type: OptionType.BOOLEAN,
@@ -90,8 +97,8 @@ const settings = definePluginSettings({
 
 export default definePlugin({
     name: "Moyai",
-    authors: [Devs.Megu, Devs.Nuckyz],
-    description: "🗿🗿🗿🗿🗿🗿🗿🗿",
+    authors: [Devs.Megu, Devs.Nuckyz, Devs.rayanzay],
+    description: "🗿 but with something else inside the settings...",
     settings,
 
     flux: {
@@ -166,9 +173,9 @@ function boom() {
     if (!settings.store.triggerWhenUnfocused && !document.hasFocus()) return;
     const audioElement = document.createElement("audio");
 
-    audioElement.src = settings.store.quality === "HD"
-        ? MOYAI_URL_HD
-        : MOYAI_URL;
+    audioElement.src = settings.store.ultraMode
+        ? (settings.store.quality === "HD" ? MOYAI_URL_ULTRA_HD : MOYAI_URL_ULTRA)
+        : (settings.store.quality === "HD" ? MOYAI_URL_HD : MOYAI_URL);
 
     audioElement.volume = settings.store.volume;
     audioElement.play();
