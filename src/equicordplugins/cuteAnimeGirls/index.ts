@@ -28,16 +28,16 @@ async function fetchReddit(sub: string) {
 }
 
 export default definePlugin({
-    name: "CuteAnimeBoys",
+    name: "CuteAnimeGirls",
     authors: [EquicordDevs.ShadyGoat],
-    description: "Add a command to send cute anime boys in the chat",
+    description: "Add a command to send cute anime girls in the chat",
     commands: [{
-        name: "anime-boys",
-        description: "Send cute anime boys",
+        name: "anime-girls",
+        description: "Send cute anime girls",
         options: [
             {
                 name: "cat",
-                description: "If set, this will send exclusively cute anime cat boys",
+                description: "If set, this will send exclusively cute anime cat girls",
                 type: ApplicationCommandOptionType.BOOLEAN,
                 required: false,
             },
