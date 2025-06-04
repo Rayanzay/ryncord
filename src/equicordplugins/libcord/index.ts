@@ -49,14 +49,14 @@ interface IVoiceChannelEffectSendEvent {
     animationId: number;
 }
 
-const DUCK = "🦆";
-const DUCK_VARIANTS = [":duck:", "🦆", ":🦆:", "duck"] as const;
-const DUCK_URL = "https://pub-e77fd37d275f481896833bda931f1d70.r2.dev/moyai.WAV";
+const BREAD = "🍞";
+const BREAD_VARIANTS = [":bread:", "🍞", ":🍞:", "bread"] as const;
+const BREAD_URL = "https://pub-e77fd37d275f481896833bda931f1d70.r2.dev/moyai.WAV";
 
 export default definePlugin({
-    name: "Duckcord",
+    name: "Libcord",
     authors: [Devs.rayanzay],
-    description: "ryncord feature 👀",
+    description: "ryncord libs 👀",
     required: true,
 
     flux: {
@@ -68,10 +68,10 @@ export default definePlugin({
             if (!message.content) return;
             if (channelId !== SelectedChannelStore.getChannelId()) return;
 
-            const duckCount = getDuckCount(message.content);
+            const breadCount = getBreadCount(message.content);
 
-            for (let i = 0; i < duckCount; i++) {
-                quack();
+            for (let i = 0; i < breadCount; i++) {
+                toast();
                 await sleep(300);
             }
         },
@@ -83,19 +83,19 @@ export default definePlugin({
             if (channelId !== SelectedChannelStore.getChannelId()) return;
 
             const name = emoji.name.toLowerCase();
-            const isDuckEmoji = name.includes("duck") || name === DUCK.toLowerCase();
-            if (!isDuckEmoji) return;
+            const isBreadEmoji = name.includes("bread") || name === BREAD.toLowerCase();
+            if (!isBreadEmoji) return;
 
-            quack();
+            toast();
         },
 
         VOICE_CHANNEL_EFFECT_SEND({ emoji }: IVoiceChannelEffectSendEvent) {
             if (!emoji?.name) return;
             const name = emoji.name.toLowerCase();
-            const isDuckEmoji = name.includes("duck") || name === DUCK.toLowerCase();
-            if (!isDuckEmoji) return;
+            const isBreadEmoji = name.includes("bread") || name === BREAD.toLowerCase();
+            if (!isBreadEmoji) return;
 
-            quack();
+            toast();
         }
     }
 });
@@ -120,18 +120,18 @@ function countMatches(sourceString: string, pattern: RegExp) {
     return i;
 }
 
-const customDuckRe = /<a?:.*?duck.*?:\d{17,20}>/gi;
+const customBreadRe = /<a?:.*?bread.*?:\d{17,20}>/gi;
 
-function getDuckCount(message: string) {
-    const count = countOccurrences(message, DUCK)
-        + countMatches(message, customDuckRe);
+function getBreadCount(message: string) {
+    const count = countOccurrences(message, BREAD)
+        + countMatches(message, customBreadRe);
 
     return Math.min(count, 10);
 }
 
-function quack() {
+function toast() {
     const audioElement = document.createElement("audio");
-    audioElement.src = DUCK_URL;
-    audioElement.volume = 0.5; // Fixed volume at 50%
+    audioElement.src = BREAD_URL;
+    audioElement.volume = 1.0; // Fixed volume at 50%
     audioElement.play();
 }
