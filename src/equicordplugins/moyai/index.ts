@@ -52,11 +52,16 @@ interface IVoiceChannelEffectSendEvent {
 }
 
 const MOYAI = "🗿";
-const TIE = "👔";
+const DUCK = "🦆";
+const DUCK_VARIANTS = [":duck:", "🦆", ":🦆:", "duck"] as const;
 const MOYAI_URL = "https://github.com/Equicord/Equibored/raw/main/sounds/moyai/moyai.mp3";
 const MOYAI_URL_HD = "https://github.com/Equicord/Equibored/raw/main/sounds/moyai/moyai.wav";
 const MOYAI_URL_ULTRA = "https://pub-e77fd37d275f481896833bda931f1d70.r2.dev/moyai.WAV";
 const MOYAI_URL_ULTRA_HD = "https://pub-e77fd37d275f481896833bda931f1d70.r2.dev/moyai.WAV";
+const DUCK_URL = "https://pub-e77fd37d275f481896833bda931f1d70.r2.dev/moyai.WAV";
+const DUCK_URL_HD = "https://pub-e77fd37d275f481896833bda931f1d70.r2.dev/moyai.WAV";
+const DUCK_URL_ULTRA = "https://pub-e77fd37d275f481896833bda931f1d70.r2.dev/moyai.WAV";
+const DUCK_URL_ULTRA_HD = "https://pub-e77fd37d275f481896833bda931f1d70.r2.dev/moyai.WAV";
 
 const settings = definePluginSettings({
     volume: {
@@ -112,10 +117,10 @@ export default definePlugin({
             if (channelId !== SelectedChannelStore.getChannelId()) return;
 
             const moyaiCount = getMoyaiCount(message.content);
-            const hasTie = message.content.includes(TIE);
+            const hasDuck = hasDuckEmoji(message.content);
 
             for (let i = 0; i < moyaiCount; i++) {
-                boom(hasTie);
+                boom(hasDuck);
                 await sleep(300);
             }
         },
@@ -127,17 +132,19 @@ export default definePlugin({
             if (channelId !== SelectedChannelStore.getChannelId()) return;
 
             const name = emoji.name.toLowerCase();
-            if (name !== MOYAI && !name.includes("moyai") && !name.includes("moai") && name !== TIE.toLowerCase()) return;
+            const isDuckEmoji = name.includes("duck") || name === DUCK.toLowerCase();
+            if (name !== MOYAI && !name.includes("moyai") && !name.includes("moai") && !isDuckEmoji) return;
 
-            boom(name === TIE.toLowerCase());
+            boom(isDuckEmoji);
         },
 
         VOICE_CHANNEL_EFFECT_SEND({ emoji }: IVoiceChannelEffectSendEvent) {
             if (!emoji?.name) return;
             const name = emoji.name.toLowerCase();
-            if (name !== MOYAI && !name.includes("moyai") && !name.includes("moai") && name !== TIE.toLowerCase()) return;
+            const isDuckEmoji = name.includes("duck") || name === DUCK.toLowerCase();
+            if (name !== MOYAI && !name.includes("moyai") && !name.includes("moai") && !isDuckEmoji) return;
 
-            boom(name === TIE.toLowerCase());
+            boom(isDuckEmoji);
         }
     }
 });
@@ -163,6 +170,7 @@ function countMatches(sourceString: string, pattern: RegExp) {
 }
 
 const customMoyaiRe = /<a?:\w*moy?ai\w*:\d{17,20}>/gi;
+const customDuckRe = /<a?:.*?duck.*?:\d{17,20}>/gi;
 
 function getMoyaiCount(message: string) {
     const count = countOccurrences(message, MOYAI)
@@ -171,13 +179,31 @@ function getMoyaiCount(message: string) {
     return Math.min(count, 10);
 }
 
-function boom(forcedUltra = false) {
+function hasDuckEmoji(message: string) {
+    // Reset regex state since it's global
+    customDuckRe.lastIndex = 0;
+
+    // Check for regular duck emoji and :duck: text
+    const hasBasicDuck = DUCK_VARIANTS.some(variant => message.includes(variant));
+
+    // Check for custom server emoji
+    const hasCustomDuck = customDuckRe.test(message);
+
+    return hasBasicDuck || hasCustomDuck;
+}
+
+function boom(isDuck = false) {
     if (!settings.store.triggerWhenUnfocused && !document.hasFocus()) return;
     const audioElement = document.createElement("audio");
 
-    audioElement.src = (forcedUltra || settings.store.ultraMode)
-        ? (settings.store.quality === "HD" ? MOYAI_URL_ULTRA_HD : MOYAI_URL_ULTRA)
-        : (settings.store.quality === "HD" ? MOYAI_URL_HD : MOYAI_URL);
+    // Use the same quality/ultra logic for both moyai and duck sounds
+    audioElement.src = settings.store.ultraMode
+        ? (settings.store.quality === "HD"
+            ? (isDuck ? DUCK_URL_ULTRA_HD : MOYAI_URL_ULTRA_HD)
+            : (isDuck ? DUCK_URL_ULTRA : MOYAI_URL_ULTRA))
+        : (settings.store.quality === "HD"
+            ? (isDuck ? DUCK_URL_HD : MOYAI_URL_HD)
+            : (isDuck ? DUCK_URL : MOYAI_URL));
 
     audioElement.volume = settings.store.volume;
     audioElement.play();
