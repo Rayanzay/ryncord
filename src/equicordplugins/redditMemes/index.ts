@@ -6,7 +6,6 @@
 
 import { EquicordDevs } from "@utils/constants";
 
-import { ApplicationCommandOptionType } from "../../api/Commands";
 import definePlugin from "../../utils/types";
 
 function rand(min, max) {
@@ -28,27 +27,19 @@ async function fetchReddit(sub: string) {
 }
 
 export default definePlugin({
-    name: "CuteAnimeGirls",
+    name: "Memes",
     authors: [EquicordDevs.ShadyGoat],
-    description: "Add a command to send cute anime girls in the chat",
+    description: "Add a command to send Reddit memes in the chat (I know its not the best)",
     commands: [{
-        name: "anime-girls",
-        description: "Send cute anime girls",
-        options: [
-            {
-                name: "cat",
-                description: "If set, this will send exclusively cute anime cat girls",
-                type: ApplicationCommandOptionType.BOOLEAN,
-                required: false,
-            },
-        ],
+        name: "memes",
+        description: "Send Reddit memes",
 
         async execute(args) {
-            let sub = "cuteanimeboys";
+            let sub = "memes";
             if (args.length > 0) {
                 const v = args[0].value as any as boolean;
                 if (v) {
-                    sub = "animecatboys";
+                    sub = "memes";
                 }
             }
 
