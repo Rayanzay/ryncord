@@ -29,7 +29,7 @@ async function fetchReddit(sub: string) {
 export default definePlugin({
     name: "Memes",
     authors: [EquicordDevs.ShadyGoat],
-    description: "Add a command to send Reddit memes in the chat (I know its not the best)",
+    description: "Add a command to send Reddit memes in the chat",
     commands: [{
         name: "memes",
         description: "Send Reddit memes",
