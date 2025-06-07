@@ -29,7 +29,7 @@ export const EQUIBOP_CONTRIB_ROLE_ID = "1287079931645263968";
 export const VENCORD_CONTRIB_ROLE_ID = "1173343399470964856";
 
 // Vencord
-export const VC_SUPPORT_CHANNEL_ID = "1224645211528105994";
+export const VC_SUPPORT_CHANNEL_ID = "1026515880080842772";
 export const VC_GUILD_ID = "1015060230222131221";
 export const VENBOT_USER_ID = "1017176847865352332";
 export const VC_DONOR_ROLE_ID = "1042507929485586532";
@@ -604,19 +604,15 @@ export const Devs = /* #__PURE__*/ Object.freeze({
     },
     samsam: {
         name: "samsam",
-        id: 400482410279469056n,
+        id: 836452332387565589n,
+    },
+    rayanzay: {
+        name: "rayanzay",
+        id: 792138443370397716n,
     },
     Cootshk: {
         name: "Cootshk",
         id: 921605971577548820n
-    },
-    rayanzay: {
-        name: "rayanzay",
-        id: 792138443370397716n,
-    },
-    rayanzay: {
-        name: "rayanzay",
-        id: 792138443370397716n,
     },
 } satisfies Record<string, Dev>);
 
