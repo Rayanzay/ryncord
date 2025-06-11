@@ -18,7 +18,11 @@
 
 import { definePluginSettings } from "@api/Settings";
 import { getUserSettingLazy } from "@api/UserSettings";
-import { Devs, EQUCORD_HELPERS, GUILD_ID, SUPPORT_CHANNEL_ID } from "@utils/constants";
+import ErrorBoundary from "@components/ErrorBoundary";
+import { Flex } from "@components/Flex";
+import { Link } from "@components/Link";
+import { openUpdaterModal } from "@components/VencordSettings/UpdaterTab";
+import { CONTRIB_ROLE_ID, Devs, DONOR_ROLE_ID, EQUCORD_HELPERS, EQUIBOP_CONTRIB_ROLE_ID, EQUICORD_TEAM, GUILD_ID, SUPPORT_CHANNEL_ID, SUPPORT_CHANNEL_IDS, VC_CONTRIB_ROLE_ID, VC_DONOR_ROLE_ID, VC_GUILD_ID, VC_REGULAR_ROLE_ID, VC_SUPPORT_CHANNEL_ID, VENCORD_CONTRIB_ROLE_ID } from "@utils/constants";
 import { sendMessage } from "@utils/discord";
 import { Logger } from "@utils/Logger";
 import { Margins } from "@utils/margins";
@@ -136,7 +140,36 @@ export default definePlugin({
     ],
 
     flux: {
-        async CHANNEL_SELECT() {
+        async CHANNEL_SELECT({ channelId }) {
+            const isSupportChannel = SUPPORT_CHANNEL_IDS.includes(channelId);
+            if (!isSupportChannel) return;
+
+            const selfId = UserStore.getCurrentUser()?.id;
+            if (!selfId || isPluginDev(selfId) || isEquicordPluginDev(selfId)) return;
+            if (channelId === VC_SUPPORT_CHANNEL_ID && Vencord.Plugins.isPluginEnabled("VCSupport") && !clicked) {
+                return Alerts.show({
+                    title: "You are entering the support channel!",
+                    body: <div>
+                        <style>
+                            {'[class*="backdrop_"][style*="backdrop-filter"]{backdrop-filter:blur(16px) brightness(0.25) !important;}'}
+                        </style>
+                        <img src="https://media.tenor.com/QtGqjwBpRzwAAAAi/wumpus-dancing.gif" />
+                        <Forms.FormText>Before you ask for help,</Forms.FormText>
+                        <Forms.FormText>Check for updates and if this</Forms.FormText>
+                        <Forms.FormText>issue could be caused by Equicord!</Forms.FormText>
+                    </div>,
+                    confirmText: "Go to Equicord Support",
+                    onConfirm() {
+                        clicked = true;
+                        VencordNative.native.openExternal("https://discord.gg/5Xh2W87egW");
+                    },
+                    cancelText: "Okay continue",
+                    onCancel() {
+                        clicked = true;
+                    },
+                });
+            }
+
             if (!IS_UPDATER_DISABLED) {
                 await checkForUpdatesOnce().catch(() => { });
             }
