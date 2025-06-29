@@ -177,7 +177,7 @@ export class EmojiStore extends FluxStore {
     };
 }
 
-export class StickersStore extends FluxStore {
+export class StickerStore extends FluxStore {
     getStickerById(id: string): Sticker | undefined;
     getStickerPack(id: string): StickerPack | undefined;
     getPremiumPacks(): StickerPack[];
@@ -275,17 +275,21 @@ export type useStateFromStores = <T>(
 
 export class RelationshipStore extends FluxStore {
     getFriendIDs(): string[];
-    /** Related to friend nicknames experiment. */
-    getNickname(userId: string): string;
+    getIgnoredIDs(): string[];
+    getBlockedIDs(): string[];
+
     getPendingCount(): number;
     getRelationshipCount(): number;
+
+    /** Related to friend nicknames. */
+    getNickname(userId: string): string;
     /** @returns Enum value from constants.RelationshipTypes */
     getRelationshipType(userId: string): number;
+    isFriend(userId: string): boolean;
+    isBlocked(userId: string): boolean;
+    isIgnored(userId: string): boolean;
+    getSince(userId: string): string;
+
     /** @returns Format: [userId: Enum value from constants.RelationshipTypes] */
     getMutableRelationships(): Record<number, number>;
-    isBlocked(userId: string): boolean;
-    isFriend(userId: string): boolean;
-
-    getSince(userId: string): string;
-    isIgnored(userId: string): boolean;
 }
