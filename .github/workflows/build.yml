@@ -8,7 +8,8 @@ on:
 env:
     FORCE_COLOR: true
     GITHUB_TOKEN: ${{ secrets.ETOKEN }}
-    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    REPO: Equicord/Equibored
+    USERNAME: GitHub-Actions
 
 permissions: write-all
 
@@ -30,6 +31,9 @@ jobs:
 
             - name: Install dependencies
               run: pnpm install --no-frozen-lockfile
+
+            - name: Build web
+              run: pnpm buildWebStandalone
 
             - name: Build
               run: pnpm buildStandalone
@@ -61,11 +65,6 @@ jobs:
                   find release -size 0 -delete
                   rm release/package.json
                   rm release/*.map
-
-            - name: Create Release (if not exists)
-              if: ${{ github.ref_name == 'main' }}
-              run: |
-                  gh release view latest || gh release create latest --title "Latest Release" --notes "Auto-generated release"
 
             - name: Upload Equicord Stable
               if: ${{ github.ref_name == 'main' }}
