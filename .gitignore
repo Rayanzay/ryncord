@@ -28,5 +28,7 @@ settings/
 
 src/equicordplugins/usrpe
 
+src/equicordplugins/betterForums
+
 # vencord companion module cache
 .modules
