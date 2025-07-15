@@ -14,7 +14,7 @@ const roleIconClassName = findByPropsLazy("roleIcon", "separator").roleIcon;
 const RoleIconComponent = findComponentByCodeLazy("#{intl::ROLE_ICON_ALT_TEXT}");
 import "./styles.css";
 
-import { User } from "discord-types/general";
+import { User } from "@vencord/discord-types";
 import { JSX } from "react";
 
 import settings from "./settings";
@@ -86,7 +86,11 @@ function CheckBadge({ badge, author }: { badge: string; author: User; }): JSX.El
                         className={roleIconClassName}
                         name="ryncord guy"
                         size={20}
+<<<<<<< HEAD
                         src={"https://blog-v2-46u.pages.dev/favicon.png"}
+=======
+                        src={"https://cdn.discordapp.com/emojis/1092089799109775453.png"}
+>>>>>>> upstream/main
                     />
                 </span>
             ) : null;
