@@ -86,11 +86,7 @@ function CheckBadge({ badge, author }: { badge: string; author: User; }): JSX.El
                         className={roleIconClassName}
                         name="ryncord guy"
                         size={20}
-<<<<<<< HEAD
                         src={"https://blog-v2-46u.pages.dev/favicon.png"}
-=======
-                        src={"https://cdn.discordapp.com/emojis/1092089799109775453.png"}
->>>>>>> upstream/main
                     />
                 </span>
             ) : null;
@@ -98,9 +94,8 @@ function CheckBadge({ badge, author }: { badge: string; author: User; }): JSX.El
             const chatBadges = discordBadges
                 .filter(badge => (author.flags || author.publicFlags) & (1 << badge[0]))
                 .map(badge => (
-
                     <RoleIconComponent
-                        key={author.id}
+                        key={badge[0]}
                         className={roleIconClassName}
                         name={badge[1]}
                         size={20}
