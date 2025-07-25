@@ -86,12 +86,8 @@ export default definePlugin({
             },
             {
                 section: "EquicordSettings",
-<<<<<<< HEAD
                 label: "ryncord",
-                searchableTitles: ["Equicord", "Settings", "Equicord Settings"],
-=======
-                label: "Equicord",
->>>>>>> upstream/main
+                searchableTitles: ["ryncord", "Settings", "ryncord Settings"],
                 element: VencordTab,
                 className: "vc-settings"
             },

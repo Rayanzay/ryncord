@@ -23,11 +23,8 @@ import { Settings, useSettings } from "@api/Settings";
 import { classNameFactory } from "@api/Styles";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { Flex } from "@components/Flex";
-<<<<<<< HEAD:src/components/PluginSettings/PluginModal.tsx
-=======
 import { debounce } from "@shared/debounce";
 import { gitRemote } from "@shared/vencordUserAgent";
->>>>>>> upstream/main:src/components/settings/tabs/plugins/PluginModal.tsx
 import { proxyLazy } from "@utils/lazy";
 import { Margins } from "@utils/margins";
 import { classes, isObjectEmpty } from "@utils/misc";
