@@ -6,12 +6,13 @@
 
 import "./styles.css";
 
+import { migratePluginSettings } from "@api/Settings";
 import { classNameFactory } from "@api/Styles";
 import { Devs, EquicordDevs } from "@utils/constants";
 import { getCurrentChannel, getIntlMessage } from "@utils/discord";
 import definePlugin from "@utils/types";
+import { Channel, Message, User } from "@vencord/discord-types";
 import { ChannelStore, GuildStore, PermissionsBits, SelectedChannelStore, UserStore } from "@webpack/common";
-import { Channel, Message, User } from "discord-types/general";
 
 import { computePermissions, Tag, tags } from "./consts";
 import { settings } from "./settings";
@@ -31,6 +32,7 @@ const genTagTypes = () => {
     return obj;
 };
 
+migratePluginSettings("MoreUserTags", "ExpandedUserTags");
 export default definePlugin({
     name: "MoreUserTags",
     description: "Adds tags for webhooks and moderative roles (owner, admin, etc.)",
@@ -73,7 +75,7 @@ export default definePlugin({
     renderNicknameIcon(props) {
         const tagId = this.getTag({
             user: UserStore.getUser(props.userId),
-            channel: ChannelStore.getChannel(this.getChannelId()),
+            channel: getCurrentChannel(),
             channelId: this.getChannelId(),
             isChat: false
         });
@@ -89,7 +91,7 @@ export default definePlugin({
             message: props.message,
             user: UserStore.getUser(props.message.author.id),
             channelId: props.message.channel_id,
-            isChat: false
+            isChat: true
         });
 
         return tagId && <Tag
@@ -125,7 +127,7 @@ export default definePlugin({
         message, user, channelId, isChat, channel
     }: {
         message?: Message,
-        user?: User & { isClyde(): boolean; },
+        user?: User,
         channel?: Channel & { isForumPost(): boolean; isMediaPost(): boolean; },
         channelId?: string;
         isChat?: boolean;
@@ -134,7 +136,6 @@ export default definePlugin({
 
         if (!user) return null;
         if (isChat && user.id === "1") return null;
-        if (user.isClyde()) return null;
         if (user.bot && settings.dontShowForBots) return null;
 
         channel ??= ChannelStore.getChannel(channelId!) as any;
@@ -143,9 +144,9 @@ export default definePlugin({
         const perms = this.getPermissions(user, channel);
 
         for (const tag of tags) {
-            if (isChat && !settings.tagSettings[tag.name].showInChat)
+            if (isChat && !settings.tagSettings[tag.name]?.showInChat)
                 continue;
-            if (!isChat && !settings.tagSettings[tag.name].showInNotChat)
+            if (!isChat && !settings.tagSettings[tag.name]?.showInNotChat)
                 continue;
 
             // If the owner tag is disabled, and the user is the owner of the guild,
@@ -156,7 +157,9 @@ export default definePlugin({
                     user.id &&
                     isChat &&
                     !settings.tagSettings.OWNER.showInChat) ||
-                (!isChat &&
+                (GuildStore.getGuild(channel?.guild_id)?.ownerId ===
+                    user.id &&
+                    !isChat &&
                     !settings.tagSettings.OWNER.showInNotChat)
             )
                 continue;

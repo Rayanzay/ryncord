@@ -13,8 +13,14 @@ import { Tag, tags } from "./consts";
 import { TagSettings } from "./types";
 
 function SettingsComponent() {
-    const tagSettings = settings.store.tagSettings as TagSettings;
+    const tagSettings = (settings.store.tagSettings ??= {} as TagSettings);
     const { localTags } = Vencord.Plugins.plugins.MoreUserTags as any;
+
+    tags.forEach(t => {
+        if (!tagSettings[t.name]) {
+            tagSettings[t.name] = { text: t.displayName, showInChat: true, showInNotChat: true };
+        }
+    });
 
     return (
         <Flex flexDirection="column">
@@ -85,29 +91,25 @@ function SettingsComponent() {
 }
 
 export const settings = definePluginSettings({
-    specialUsers: {
-        type: OptionType.STRING,
-        description: "Special users (comma-separated user IDs)",
-        default: ""
-    },
-    specialTag: {
-        type: OptionType.STRING,
-        description: "Tag for special users",
-        default: "SPECIAL"
-    },
-    dontShowBotTag: {
+    dontShowForBots: {
+        description: "Don't show extra tags for bots (excluding webhooks)",
         type: OptionType.BOOLEAN,
-        description: "Don't show bot tag",
         default: false
     },
-    dontShowForBots: {
+    dontShowBotTag: {
+        description: "Only show extra tags for bots / Hide [APP] text",
         type: OptionType.BOOLEAN,
-        description: "Don't show tags for bots",
+        default: false,
+        restartNeeded: true
+    },
+    showWebhookTagFully: {
+        description: "Show Webhook tag in followed channels like announcements",
+        type: OptionType.BOOLEAN,
         default: false
     },
     tagSettings: {
         type: OptionType.COMPONENT,
-        description: "Tag Settings",
-        component: SettingsComponent
-    }
+        component: SettingsComponent,
+        description: "fill me"
+    },
 });

@@ -17,13 +17,8 @@
 */
 
 import { Settings } from "@api/Settings";
+import { BackupAndRestoreTab, CloudTab, PatchHelperTab, PluginsTab, UpdaterTab, VencordTab } from "@components/settings";
 import ThemesTab from "@components/ThemeSettings/ThemesTab";
-import BackupAndRestoreTab from "@components/VencordSettings/BackupAndRestoreTab";
-import CloudTab from "@components/VencordSettings/CloudTab";
-import PatchHelperTab from "@components/VencordSettings/PatchHelperTab";
-import PluginsTab from "@components/VencordSettings/PluginsTab";
-import UpdaterTab from "@components/VencordSettings/UpdaterTab";
-import VencordTab from "@components/VencordSettings/VencordTab";
 import { Devs } from "@utils/constants";
 import { getIntlMessage } from "@utils/discord";
 import definePlugin, { OptionType } from "@utils/types";
@@ -91,8 +86,12 @@ export default definePlugin({
             },
             {
                 section: "EquicordSettings",
+<<<<<<< HEAD
                 label: "ryncord",
                 searchableTitles: ["Equicord", "Settings", "Equicord Settings"],
+=======
+                label: "Equicord",
+>>>>>>> upstream/main
                 element: VencordTab,
                 className: "vc-settings"
             },
@@ -125,7 +124,7 @@ export default definePlugin({
                 className: "vc-cloud"
             },
             {
-                section: "EquicordSettingsSync",
+                section: "settings/tabsSync",
                 label: "Backup & Restore",
                 searchableTitles: ["Backup & Restore"],
                 element: BackupAndRestoreTab,
