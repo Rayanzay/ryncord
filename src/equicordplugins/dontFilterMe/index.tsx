@@ -7,7 +7,7 @@
 import { addMessagePreSendListener } from "@api/MessageEvents";
 import { Devs } from "@utils/constants";
 import definePlugin from "@utils/types";
-import { Alerts, ChannelStore, Forms } from "@webpack/common";
+import { Alerts, ChannelStore, Forms, PermissionsBits, PermissionStore } from "@webpack/common";
 
 import filterList from "./constants";
 
@@ -23,7 +23,7 @@ function warningEmbedNotice(trigger) {
                 <Forms.FormText>
                     Your message contains a term on the automod preset list. (Term "{trigger}")
                 </Forms.FormText>
-                <Forms.FormText type={Forms.FormText.Types.DESCRIPTION}>
+                <Forms.FormText>
                     There is a high chance your message will be blocked and potentially moderated by a server moderator.
                 </Forms.FormText>
             </div>,
@@ -41,15 +41,14 @@ export default definePlugin({
     authors: [Devs.Samwich],
     dependencies: ["MessageEventsAPI"],
     start() {
-        this.preSend = addMessagePreSendListener(async (channelId, messageObj, extra) => {
-
-            if (ChannelStore.getChannel(channelId.toString()).isDM()) return { cancel: false };
+        this.preSend = addMessagePreSendListener(async (channelId, messageObj) => {
+            const channel = ChannelStore.getChannel(channelId);
+            if (channel.isDM()) return { cancel: false };
+            if (PermissionStore.can(PermissionsBits.ADMINISTRATOR, channel) || PermissionStore.can(PermissionsBits.MANAGE_GUILD, channel)) return { cancel: false };
 
             const escapedStrings = filterList.map(escapeRegex);
             const regexString = escapedStrings.join("|");
             const regex = new RegExp(`(${regexString})`, "i");
-
-            console.log(channelId);
 
             const matches = regex.exec(messageObj.content);
             if (matches) {
@@ -57,6 +56,7 @@ export default definePlugin({
                     return { cancel: true };
                 }
             }
+
             return { cancel: false };
         });
     }
