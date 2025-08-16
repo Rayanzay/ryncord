@@ -199,61 +199,6 @@ export default definePlugin({
 
             if (!IS_UPDATER_DISABLED) {
                 await checkForUpdatesOnce().catch(() => { });
-<<<<<<< HEAD
-=======
-
-                if (isOutdated) {
-                    return Alerts.show({
-                        title: "Hold on!",
-                        body: <div>
-                            <Forms.FormText>You are using an outdated version of Equicord! Chances are, your issue is already fixed.</Forms.FormText>
-                            <Forms.FormText className={Margins.top8}>
-                                Please first update before asking for support!
-                            </Forms.FormText>
-                        </div>,
-                        onCancel: () => openUpdaterModal!(),
-                        cancelText: "View Updates",
-                        confirmText: "Update & Restart Now",
-                        onConfirm: forceUpdate,
-                        secondaryConfirmText: "I know what I'm doing or I can't update"
-                    });
-                }
-            }
-
-            const roles = GuildMemberStore.getSelfMember(VC_GUILD_ID)?.roles || GuildMemberStore.getSelfMember(GUILD_ID)?.roles;
-            if (!roles || TrustedRolesIds.some(id => roles.includes(id))) return;
-
-            if (!IS_WEB && IS_UPDATER_DISABLED) {
-                return Alerts.show({
-                    title: "Hold on!",
-                    body: <div>
-                        <Forms.FormText>You are using an externally updated Equicord version, the ability to help you here may be limited.</Forms.FormText>
-                        <Forms.FormText className={Margins.top8}>
-                            Please join the <Link href="https://equicord.org/discord">Equicord Server</Link> for support,
-                            or if this issue persists on Vencord, continue on.
-                        </Forms.FormText>
-                    </div>
-                });
-            }
-
-            if (!IS_STANDALONE && !settings.store.dismissedDevBuildWarning) {
-                return Alerts.show({
-                    title: "Hold on!",
-                    body: <div>
-                        <Forms.FormText>You are using a custom build of Equicord, which we do not provide support for!</Forms.FormText>
-
-                        <Forms.FormText className={Margins.top8}>
-                            We only provide support for <Link href="https://github.com/Equicord/Equicord">official builds</Link>.
-                            Either <Link href="https://github.com/Equicord/Equilotl">switch to an official build</Link> or figure your issue out yourself.
-                        </Forms.FormText>
-
-                        <Text variant="text-md/bold" className={Margins.top8}>You will be banned from receiving support if you ignore this rule.</Text>
-                    </div>,
-                    confirmText: "Understood",
-                    secondaryConfirmText: "Don't show again",
-                    onConfirmSecondary: () => settings.store.dismissedDevBuildWarning = true
-                });
->>>>>>> upstream
             }
         }
     },
