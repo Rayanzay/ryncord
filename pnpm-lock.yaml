@@ -9,7 +9,7 @@ patchedDependencies:
     hash: 641e6c93bb737bac7fc283416857bd095cd85bcbcba63becb7a8bbcc78f73076
     path: patches/@types__less@3.0.6.patch
   eslint@9.20.1:
-    hash: xm46kqcmdgzlmm4aifkfpxaho4
+    hash: 4f22e92770bf528b2448fbec0984b9c0761dd588ed0e83dcc41edfc9af711215
     path: patches/eslint@9.20.1.patch
 
 importers:
@@ -2605,11 +2605,7 @@ snapshots:
 
   '@rtsao/scc@1.1.0': {}
 
-  '@sapphi-red/web-noise-suppressor@0.3.5': {}
-
-  '@socket.io/component-emitter@3.1.2': {}
-
-  '@stylistic/eslint-plugin@4.2.0(eslint@9.20.1(patch_hash=xm46kqcmdgzlmm4aifkfpxaho4))(typescript@5.8.2)':
+  '@stylistic/eslint-plugin@4.2.0(eslint@9.20.1(patch_hash=4f22e92770bf528b2448fbec0984b9c0761dd588ed0e83dcc41edfc9af711215))(typescript@5.8.2)':
     dependencies:
       '@typescript-eslint/utils': 8.28.0(eslint@9.20.1(patch_hash=4f22e92770bf528b2448fbec0984b9c0761dd588ed0e83dcc41edfc9af711215))(typescript@5.8.2)
       eslint: 9.20.1(patch_hash=4f22e92770bf528b2448fbec0984b9c0761dd588ed0e83dcc41edfc9af711215)
