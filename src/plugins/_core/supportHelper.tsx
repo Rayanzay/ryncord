@@ -22,11 +22,11 @@ import ErrorBoundary from "@components/ErrorBoundary";
 import { Flex } from "@components/Flex";
 import { Link } from "@components/Link";
 import { openUpdaterModal } from "@components/settings/tabs/updater";
-import { CONTRIB_ROLE_ID, Devs, DONOR_ROLE_ID, EQUIBOP_CONTRIB_ROLE_ID, EQUICORD_HELPERS, EQUICORD_TEAM, GUILD_ID, SUPPORT_CHANNEL_ID, SUPPORT_CHANNEL_IDS, VC_CONTRIB_ROLE_ID, VC_DONOR_ROLE_ID, VC_GUILD_ID, VC_REGULAR_ROLE_ID, VC_SUPPORT_CHANNEL_IDS, VENCORD_CONTRIB_ROLE_ID } from "@utils/constants";
+import { CONTRIB_ROLE_ID, Devs, DONOR_ROLE_ID, EQUIBOP_CONTRIB_ROLE_ID, EQUICORD_TEAM, GUILD_ID, SUPPORT_CHANNEL_ID, SUPPORT_CHANNEL_IDS, VC_CONTRIB_ROLE_ID, VC_DONOR_ROLE_ID, VC_GUILD_ID, VC_REGULAR_ROLE_ID, VC_SUPPORT_CHANNEL_IDS, VENCORD_CONTRIB_ROLE_ID } from "@utils/constants";
 import { sendMessage } from "@utils/discord";
 import { Logger } from "@utils/Logger";
 import { Margins } from "@utils/margins";
-import { tryOrElse } from "@utils/misc";
+import { isEquicordGuild, isEquicordPluginDev, isEquicordSupport, isPluginDev, isSupportChannel, tryOrElse } from "@utils/misc";
 import { relaunch } from "@utils/native";
 import { onlyOnce } from "@utils/onlyOnce";
 import { makeCodeblock } from "@utils/text";
@@ -146,6 +146,25 @@ function generatePluginList() {
         content += `**Enabled UserPlugins (${enabledUserPlugins.length}):**\n${makeCodeblock(enabledUserPlugins.join(", "))}`;
     }
 
+    if (enabledPlugins.length > 100 && !(isPluginDev(UserStore.getCurrentUser()?.id) || isEquicordPluginDev(UserStore.getCurrentUser()?.id))) {
+        return Alerts.show({
+            title: "You are attempting to get support!",
+            body: <div>
+                <style>
+                    {'[class*="backdrop_"][style*="backdrop-filter"]{backdrop-filter:blur(16px) brightness(0.25) !important;}'}
+                </style>
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: "1rem" }}>
+                    <img src="https://media.tenor.com/QtGqjwBpRzwAAAAi/wumpus-dancing.gif" />
+                </div>
+                <Forms.FormText>Before you ask for help,</Forms.FormText>
+                <Forms.FormText>We do not handle support for users who use 100+ plugins</Forms.FormText>
+                <Forms.FormText>issue could be plugin confliction</Forms.FormText>
+                <Forms.FormText>try removing some plugins and see if it fixes!</Forms.FormText>
+            </div>,
+            cancelText: "Okay continue"
+        });
+    }
+
     return content;
 }
 
@@ -217,11 +236,11 @@ export default definePlugin({
     renderMessageAccessory(props): ReactElement | null {
         const buttons = [] as ReactElement[];
 
-        const equicordSupport = GuildMemberStore.getMember(GUILD_ID, props.message.author.id)?.roles?.includes(EQUICORD_HELPERS);
+        const equicordSupport = isEquicordSupport(props.message.author.id);
 
         const shouldAddUpdateButton =
             !IS_UPDATER_DISABLED
-            && ((props.channel.id === SUPPORT_CHANNEL_ID && equicordSupport))
+            && ((isSupportChannel(props.channel.id) && equicordSupport))
             && props.message.content?.includes("update");
 
         if (shouldAddUpdateButton) {

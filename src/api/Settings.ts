@@ -35,6 +35,7 @@ export interface Settings {
     eagerPatches: boolean;
     enabledThemes: string[];
     enabledThemeLinks: string[];
+    themeNames: Record<string, string>;
     enableReactDevtools: boolean;
     themeLinks: string[];
     frameless: boolean;
@@ -67,6 +68,7 @@ export interface Settings {
         timeout: number;
         position: "top-right" | "bottom-right";
         useNative: "always" | "never" | "not-focused";
+        missed: boolean;
         logLimit: number;
     };
 
@@ -94,6 +96,7 @@ const DefaultSettings: Settings = {
     eagerPatches: IS_REPORTER,
     enabledThemes: [],
     enabledThemeLinks: [],
+    themeNames: {},
     enableReactDevtools: false,
     frameless: false,
     transparent: false,
@@ -107,6 +110,7 @@ const DefaultSettings: Settings = {
         timeout: 5000,
         position: "bottom-right",
         useNative: "not-focused",
+        missed: true,
         logLimit: 50
     },
 

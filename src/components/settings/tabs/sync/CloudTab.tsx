@@ -22,10 +22,10 @@ import { CheckedTextInput } from "@components/CheckedTextInput";
 import { Grid } from "@components/Grid";
 import { Link } from "@components/Link";
 import { SettingsTab, wrapTab } from "@components/settings/tabs/BaseTab";
-import { authorizeCloud, checkCloudUrlCsp, cloudLogger, deauthorizeCloud, getCloudAuth, getCloudUrl } from "@utils/cloud";
+import { authorizeCloud, cloudLogger, deauthorizeCloud, getCloudAuth, getCloudUrl } from "@utils/cloud";
 import { Margins } from "@utils/margins";
 import { deleteCloudSettings, getCloudSettings, putCloudSettings } from "@utils/settingsSync";
-import { Alerts, Button, Forms, Switch, Tooltip } from "@webpack/common";
+import { Alerts, Button, Forms, Switch, Tooltip, useState } from "@webpack/common";
 
 function validateUrl(url: string) {
     try {
@@ -37,8 +37,6 @@ function validateUrl(url: string) {
 }
 
 async function eraseAllData() {
-    if (!await checkCloudUrlCsp()) return;
-
     const res = await fetch(new URL("/v1/", getCloudUrl()), {
         method: "DELETE",
         headers: { Authorization: await getCloudAuth() }
@@ -119,6 +117,17 @@ function SettingsSyncSection() {
 
 function CloudTab() {
     const settings = useSettings(["cloud.authenticated", "cloud.url"]);
+    const [inputKey, setInputKey] = useState(0);
+
+    async function changeUrl(url: string) {
+        settings.cloud.url = url;
+        settings.cloud.authenticated = false;
+
+        await deauthorizeCloud();
+        await authorizeCloud();
+
+        setInputKey(prev => prev + 1);
+    }
 
     return (
         <SettingsTab title="Vencord Cloud">
@@ -147,12 +156,12 @@ function CloudTab() {
                     Which backend to use when using cloud integrations.
                 </Forms.FormText>
                 <CheckedTextInput
-                    key="backendUrl"
+                    key={`backendUrl-${inputKey}`}
                     value={settings.cloud.url}
                     onChange={async v => {
                         settings.cloud.url = v;
                         settings.cloud.authenticated = false;
-                        deauthorizeCloud();
+                        await deauthorizeCloud();
                     }}
                     validate={validateUrl}
                 />
@@ -162,8 +171,8 @@ function CloudTab() {
                         size={Button.Sizes.MEDIUM}
                         disabled={!settings.cloud.authenticated}
                         onClick={async () => {
-                            await deauthorizeCloud();
                             settings.cloud.authenticated = false;
+                            await deauthorizeCloud();
                             await authorizeCloud();
                         }}
                     >
@@ -183,6 +192,12 @@ function CloudTab() {
                         })}
                     >
                         Erase All Data
+                    </Button>
+                    <Button size={Button.Sizes.MEDIUM} onClick={() => changeUrl("https://cloud.equicord.org/")}>
+                        Use Equicord's Cloud
+                    </Button>
+                    <Button size={Button.Sizes.MEDIUM} onClick={() => changeUrl("https://api.vencord.dev/")}>
+                        Use Vencord's Cloud
                     </Button>
                 </Grid>
 
