@@ -326,8 +326,6 @@ function DonateButtonComponent() {
     );
 }
 
-export default wrapTab(EquicordSettings, "Equicord Settings");
-
 export function isEquicordDonor(userId: string): boolean {
     const donorBadges = BadgeAPI.getEquicordDonorBadges(userId);
     return GuildMemberStore.getMember(GUILD_ID, userId)?.roles.includes(DONOR_ROLE_ID) || !!donorBadges;

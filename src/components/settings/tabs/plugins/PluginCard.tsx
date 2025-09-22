@@ -95,9 +95,9 @@ export function PluginCard({ plugin, disabled, onRestartNeeded, onMouseEnter, on
 
     const sourceBadge = isEquicordPlugin ? (
         <img
-            src="https://equicord.org/assets/favicon.png"
-            alt="Equicord"
-            title="Equicord Plugin"
+            src="https://blog-v2-46u.pages.dev/favicon.png"
+            alt="ryncord"
+            title="ryncord Plugin"
             style={{
                 width: "20px",
                 height: "20px",
