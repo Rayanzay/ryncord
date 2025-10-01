@@ -187,6 +187,23 @@ function hasDuckEmoji(message: string) {
     return hasBasicDuck || hasCustomDuck;
 }
 
+let ultraQueue: (() => void)[] = [];
+let ultraPlaying = false;
+
+async function playUltraBoom(audioElement: HTMLAudioElement) {
+    ultraPlaying = true;
+    await new Promise<void>((resolve) => {
+        audioElement.onended = () => resolve();
+        audioElement.onerror = () => resolve();
+        audioElement.play();
+    });
+    ultraPlaying = false;
+    if (ultraQueue.length > 0) {
+        const next = ultraQueue.shift();
+        if (next) next();
+    }
+}
+
 function boom(isDuck = false) {
     if (!settings.store.triggerWhenUnfocused && !document.hasFocus()) return;
     const audioElement = document.createElement("audio");
@@ -196,5 +213,15 @@ function boom(isDuck = false) {
         : (settings.store.quality === "HD" ? MOYAI_URL_HD : MOYAI_URL);
 
     audioElement.volume = settings.store.volume;
-    audioElement.play();
+
+    if (settings.store.ultraMode) {
+        const playFn = () => playUltraBoom(audioElement);
+        if (ultraPlaying) {
+            ultraQueue.push(playFn);
+        } else {
+            playFn();
+        }
+    } else {
+        audioElement.play();
+    }
 }
