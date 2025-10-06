@@ -8,6 +8,7 @@ import "./VencordTab.css";
 
 import { openNotificationLogModal } from "@api/Notifications/notificationLog";
 import { useSettings } from "@api/Settings";
+import { FormSwitch } from "@components/FormSwitch";
 import { FolderIcon, GithubIcon, LogIcon, PaintbrushIcon, RestartIcon } from "@components/Icons";
 import { openContributorModal, openPluginModal, SettingsTab, wrapTab } from "@components/settings";
 import { DonateButton, InviteButton } from "@components/settings/DonateButton";
@@ -16,16 +17,15 @@ import { SpecialCard } from "@components/settings/SpecialCard";
 import { gitRemote } from "@shared/vencordUserAgent";
 import { DONOR_ROLE_ID, GUILD_ID, VC_DONOR_ROLE_ID, VC_GUILD_ID } from "@utils/constants";
 import { Margins } from "@utils/margins";
-import { identity, isEquicordPluginDev, isPluginDev } from "@utils/misc";
+import { identity, isAnyPluginDev } from "@utils/misc";
 import { relaunch } from "@utils/native";
 import { Button, Flex, Forms, GuildMemberStore, React, Select, UserStore } from "@webpack/common";
-import { Switch } from "@components/settings/Switch";
 import BadgeAPI from "plugins/_api/badges";
 
 import { openNotificationSettingsModal } from "./NotificationSettings";
 
 const DEFAULT_DONATE_IMAGE = "https://cdn.discordapp.com/emojis/1026533090627174460.png";
-const SHIGGY_DONATE_IMAGE = "https://i.imgur.com/57ATLZu.png";
+const SHIGGY_DONATE_IMAGE = "https://equicord.org/assets/favicon.png";
 
 const VENNIE_DONATOR_IMAGE = "https://cdn.discordapp.com/emojis/1238120638020063377.png";
 const COZY_CONTRIB_IMAGE = "https://cdn.discordapp.com/emojis/1026533070955872337.png";
@@ -199,15 +199,13 @@ function EquicordSettings() {
                 {Switches.map(
                     s =>
                         s && (
-                            <div key={s.key} style={{ marginBottom: 12 }}>
-                                <Switch
-                                    checked={settings[s.key]}
-                                    onChange={v => (settings[s.key] = v)}
-                                    disabled={false}
-                                />
-                                <span style={{ marginLeft: 8 }}>{s.title}</span>
-                                <div style={{ color: 'var(--text-muted)', fontSize: 12 }}>
-                                    {s.warning.enabled ? (
+                            <FormSwitch
+                                key={s.key}
+                                value={settings[s.key]}
+                                onChange={v => (settings[s.key] = v)}
+                                title={s.title}
+                                description={
+                                    s.warning.enabled ? (
                                         <>
                                             {s.note}
                                             <div className="form-switch-warning">
@@ -216,9 +214,9 @@ function EquicordSettings() {
                                         </>
                                     ) : (
                                         s.note
-                                    )}
-                                </div>
-                            </div>
+                                    )
+                                }
+                            />
                         ),
                 )}
             </Forms.FormSection>

@@ -5,11 +5,14 @@
  */
 
 import { CheckedTextInput } from "@components/CheckedTextInput";
+import { FormSwitch } from "@components/FormSwitch";
 import { Margins } from "@utils/margins";
 import { identity } from "@utils/misc";
-import { Card, Forms, PresenceStore, React, Select, SnowflakeUtils, Switch, TextInput, UserStore } from "@webpack/common";
+import { Activity } from "@vencord/discord-types";
+import { ActivityFlags, ActivityType } from "@vencord/discord-types/enums";
+import { Card, Forms, PresenceStore, React, Select, SnowflakeUtils, TextInput, UserStore } from "@webpack/common";
 
-import { Activity, ActivityType, AppIdSetting, makeEmptyAppId } from ".";
+import { AppIdSetting, makeEmptyAppId } from ".";
 
 interface SettingsProps {
     appIds: AppIdSetting[];
@@ -28,7 +31,14 @@ export function ReplaceTutorial() {
         <>
             <Forms.FormTitle tag="h3">IDs of currently running activities</Forms.FormTitle>
             {
-                activities.length === 0 ? <Forms.FormText>No running activities</Forms.FormText> : activities.map(activity => { return activity.flags !== 48 ? <Forms.FormText>{activity.name}: {activity.application_id}</Forms.FormText> : null; /* hide spotify */ })
+                activities.length === 0
+                    ? <Forms.FormText>No running activities</Forms.FormText>
+                    : activities.map(activity => {
+                        const isSpotify = (activity.flags & (ActivityFlags.SYNC | ActivityFlags.PLAY)) === (ActivityFlags.SYNC | ActivityFlags.PLAY);
+                        return !isSpotify
+                            ? <Forms.FormText>{activity.name}: {activity.application_id}</Forms.FormText>
+                            : null;
+                    })
             }
             <Forms.FormTitle tag="h3" className={Margins.top8}>Available variables</Forms.FormTitle>
             <Forms.FormText>
@@ -69,16 +79,15 @@ export function ReplaceSettings({ appIds, update, save }: SettingsProps) {
                     <Card style={{ padding: "1em", opacity: !setting.enabled ? "60%" : "" }} key={i}>
                         {
                             isValidSnowflake(setting.appId) ?
-                                <Switch
+                                <FormSwitch
+                                    title="Apply edits to app"
                                     value={setting.enabled}
                                     onChange={value => {
                                         onChange(value, i, "enabled");
                                     }}
                                     className={Margins.bottom8}
                                     hideBorder={true}
-                                >
-                                    Apply edits to app
-                                </Switch> : <Forms.FormTitle tag="h3">Add new application</Forms.FormTitle>
+                                /> : <Forms.FormTitle tag="h3">Add new application</Forms.FormTitle>
                         }
                         <Forms.FormTitle className={`${Margins.top8} ${Margins.bottom8}`}>Application ID</Forms.FormTitle>
                         <CheckedTextInput
@@ -192,31 +201,26 @@ export function ReplaceSettings({ appIds, update, save }: SettingsProps) {
                                         />
                                     </>
                                 }
-                                <Switch
+                                <FormSwitch
+                                    title="Hide assets (large & small images)"
                                     value={setting.disableAssets}
                                     onChange={value => {
                                         onChange(value, i, "disableAssets");
                                     }}
                                     className={Margins.top8}
                                     hideBorder={true}
-                                    style={{ marginBottom: "0" }}
-                                >
-                                    Hide assets (large & small images)
-                                </Switch>
-                                <Switch
+                                />
+                                <FormSwitch
+                                    title="Hide timestamps"
                                     value={setting.disableTimestamps}
                                     onChange={value => {
                                         onChange(value, i, "disableTimestamps");
                                     }}
                                     className={Margins.top8}
-                                    hideBorder={true}
-                                    style={{ marginBottom: "0" }}
-                                >
-                                    Hide timestamps
-                                </Switch>
+                                    hideBorder={true} />
                             </>
                         }
-                    </Card>
+                    </Card >
                 )
             }
         </>
