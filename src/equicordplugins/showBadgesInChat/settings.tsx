@@ -11,13 +11,13 @@ import { Text, useEffect, UserStore, useState } from "@webpack/common";
 const settings = definePluginSettings({
     showEquicordDonor: {
         type: OptionType.BOOLEAN,
-        description: "Enable to show Equicord Donor badges in chat.",
+        description: "Enable to show Vencord Donor badges in chat.",
         hidden: true,
         default: true
     },
     EquicordDonorPosition: {
         type: OptionType.NUMBER,
-        description: "The position of the Equicord Donor badges.",
+        description: "The position of the Vencord Donor badges.",
         hidden: true,
         default: 0
     },

@@ -86,7 +86,7 @@ export function EquicordDonorModal() {
                             }}
                         >
                             <Heart />
-                            Equicord Donor
+                            Vencord Donor
                         </Forms.FormTitle>
                     </Flex>
                 </ModalHeader>
