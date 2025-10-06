@@ -18,7 +18,8 @@ import { DONOR_ROLE_ID, GUILD_ID, VC_DONOR_ROLE_ID, VC_GUILD_ID } from "@utils/c
 import { Margins } from "@utils/margins";
 import { identity, isEquicordPluginDev, isPluginDev } from "@utils/misc";
 import { relaunch } from "@utils/native";
-import { Button, Flex, Forms, GuildMemberStore, React, Select, Switch, UserStore } from "@webpack/common";
+import { Button, Flex, Forms, GuildMemberStore, React, Select, UserStore } from "@webpack/common";
+import { Switch } from "@components/settings/Switch";
 import BadgeAPI from "plugins/_api/badges";
 
 import { openNotificationSettingsModal } from "./NotificationSettings";
@@ -111,16 +112,14 @@ function EquicordSettings() {
 
     return (
         <SettingsTab title="ryncord Settings">
-            {(isEquicordDonor(user?.id) || isVencordDonor(user?.id)) ? (
+            {(isEquicordDonor(user?.id)) ? (
                 <SpecialCard
                     title="Donations"
                     subtitle="Thank you for donating!"
                     description={
-                        isEquicordDonor(user?.id) && isVencordDonor(user?.id)
-                            ? "All Vencord users can see your Vencord donor badge, and Equicord users can see your Equicord donor badge. To change your Vencord donor badge, contact @vending.machine. For your Equicord donor badge, make a ticket in Equicord's server."
-                            : isVencordDonor(user?.id)
-                                ? "All Vencord users can see your badge! You can manage your perks by messaging @vending.machine."
-                                : "All Equicord users can see your badge! You can manage your perks by making a ticket in Equicord's server."
+                        isEquicordDonor(user?.id)
+                            ? "All Equicord users can see your badge! You can manage your perks by making a ticket in Equicord's server."
+                            : ""
                     }
                     cardImage={VENNIE_DONATOR_IMAGE}
                     backgroundImage={DONOR_BACKGROUND_IMAGE}
@@ -200,12 +199,15 @@ function EquicordSettings() {
                 {Switches.map(
                     s =>
                         s && (
-                            <Switch
-                                key={s.key}
-                                value={settings[s.key]}
-                                onChange={v => (settings[s.key] = v)}
-                                note={
-                                    s.warning.enabled ? (
+                            <div key={s.key} style={{ marginBottom: 12 }}>
+                                <Switch
+                                    checked={settings[s.key]}
+                                    onChange={v => (settings[s.key] = v)}
+                                    disabled={false}
+                                />
+                                <span style={{ marginLeft: 8 }}>{s.title}</span>
+                                <div style={{ color: 'var(--text-muted)', fontSize: 12 }}>
+                                    {s.warning.enabled ? (
                                         <>
                                             {s.note}
                                             <div className="form-switch-warning">
@@ -214,11 +216,9 @@ function EquicordSettings() {
                                         </>
                                     ) : (
                                         s.note
-                                    )
-                                }
-                            >
-                                {s.title}
-                            </Switch>
+                                    )}
+                                </div>
+                            </div>
                         ),
                 )}
             </Forms.FormSection>

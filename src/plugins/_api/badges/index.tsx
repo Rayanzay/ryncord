@@ -21,7 +21,6 @@ import "./fixDiscordBadgePadding.css";
 import { _getBadges, BadgePosition, BadgeUserArgs, ProfileBadge } from "@api/Badges";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { openContributorModal } from "@components/settings/tabs";
-import { isEquicordDonor } from "@components/settings/tabs/vencord";
 import { Devs } from "@utils/constants";
 import { Logger } from "@utils/Logger";
 import { copyWithToast, shouldShowContributorBadge, shouldShowEquicordContributorBadge } from "@utils/misc";
@@ -57,7 +56,7 @@ const EquicordDonorBadge: ProfileBadge = {
     shouldShow: ({ userId }) => {
         const donorBadges = EquicordDonorBadges[userId]?.map(badge => badge.badge);
         const hasDonorBadge = donorBadges?.includes("https://cdn.nest.rip/uploads/78cb1e77-b7a6-4242-9089-e91f866159bf.png");
-        return isEquicordDonor(userId) && !hasDonorBadge;
+        return !hasDonorBadge;
     },
     onClick: () => {
         return EquicordDonorModal();

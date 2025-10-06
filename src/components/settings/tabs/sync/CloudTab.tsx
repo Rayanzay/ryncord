@@ -25,7 +25,8 @@ import { SettingsTab, wrapTab } from "@components/settings/tabs/BaseTab";
 import { authorizeCloud, cloudLogger, deauthorizeCloud, getCloudAuth, getCloudUrl } from "@utils/cloud";
 import { Margins } from "@utils/margins";
 import { deleteCloudSettings, getCloudSettings, putCloudSettings } from "@utils/settingsSync";
-import { Alerts, Button, Forms, Switch, Tooltip, useState } from "@webpack/common";
+import { Alerts, Button, Forms, Tooltip, useState } from "@webpack/common";
+import { Switch } from "@components/settings/Switch";
 
 function validateUrl(url: string) {
     try {

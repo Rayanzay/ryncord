@@ -27,7 +27,8 @@ import { ModalCloseButton, ModalContent, ModalProps, ModalRoot, ModalSize, openM
 import { relaunch } from "@utils/native";
 import { useAwaiter } from "@utils/react";
 import { changes, checkForUpdates, getRepo, isNewer, shortGitHash, update, updateError, UpdateLogger } from "@utils/updater";
-import { Alerts, Button, Card, Forms, Parser, React, Switch, Toasts } from "@webpack/common";
+import { Alerts, Button, Card, Forms, Parser, React, Toasts } from "@webpack/common";
+import { Switch } from "@components/settings/Switch";
 
 import gitHash from "~git-hash";
 
