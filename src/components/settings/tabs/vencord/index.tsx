@@ -140,7 +140,10 @@ function EquicordSettings() {
                     buttonOnClick={() => openContributorModal(user)}
                 />
             )}
-            <Forms.FormSection title="Quick Actions">
+
+            <section>
+                <Forms.FormTitle tag="h5">Quick Actions</Forms.FormTitle>
+
                 <QuickActionCard>
                     <QuickAction
                         Icon={LogIcon}
@@ -176,15 +179,13 @@ function EquicordSettings() {
                         }
                     />
                 </QuickActionCard>
-            </Forms.FormSection>
+            </section>
 
             <Forms.FormDivider />
 
-            <Forms.FormSection className={Margins.top16} title="Settings" tag="h5">
-                <Forms.FormText
-                    className={Margins.bottom20}
-                    style={{ color: "var(--text-muted)" }}
-                >
+            <section className={Margins.top16}>
+                <Forms.FormTitle tag="h5">Settings</Forms.FormTitle>
+                <Forms.FormText className={Margins.bottom20} style={{ color: "var(--text-muted)" }}>
                     Hint: You can change the position of this settings section in the{" "}
                     <Button
                         look={Button.Looks.BLANK}
@@ -219,7 +220,7 @@ function EquicordSettings() {
                             />
                         ),
                 )}
-            </Forms.FormSection>
+            </section>
 
             {needsVibrancySettings && (
                 <>
@@ -291,10 +292,9 @@ function EquicordSettings() {
                 </>
             )}
 
-            <Forms.FormSection
+            <section
                 className={Margins.top16}
                 title="ryncord Notifications"
-                tag="h5"
             >
                 <Flex>
                     <Button onClick={openNotificationSettingsModal}>
@@ -304,7 +304,7 @@ function EquicordSettings() {
                         View Notification Log
                     </Button>
                 </Flex>
-            </Forms.FormSection>
+            </section>
         </SettingsTab>
     );
 }
