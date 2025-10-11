@@ -203,7 +203,7 @@ function CloudTab() {
                 </Grid>
 
                 <Forms.FormDivider className={Margins.top16} />
-            </section >
+            </Forms.FormSection>
             <SettingsSyncSection />
         </SettingsTab>
     );
