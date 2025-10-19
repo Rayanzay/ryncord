@@ -61,8 +61,8 @@ const EquicordDonorBadge: ProfileBadge = {
     position: BadgePosition.START,
     shouldShow: ({ userId }) => {
         const donorBadges = EquicordDonorBadges[userId]?.map(badge => badge.badge);
-        const hasDonorBadge = donorBadges?.includes("https://cdn.nest.rip/uploads/78cb1e77-b7a6-4242-9089-e91f866159bf.png");
-        return !hasDonorBadge;
+        const hasDonorBadge = donorBadges?.includes(EQUICORD_DONOR_BADGE);
+        return isEquicordDonor(userId) && !hasDonorBadge;
     },
     onClick: () => {
         return EquicordDonorModal();
