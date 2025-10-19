@@ -29,7 +29,7 @@ import { SettingsTab, wrapTab } from "@components/settings/tabs/BaseTab";
 import { authorizeCloud, cloudLogger, deauthorizeCloud, getCloudAuth, getCloudUrl } from "@utils/cloud";
 import { Margins } from "@utils/margins";
 import { deleteCloudSettings, getCloudSettings, putCloudSettings } from "@utils/settingsSync";
-import { Alerts, Button, Tooltip, useState } from "@webpack/common";
+import { Alerts, Button, Forms, Tooltip, useState } from "@webpack/common";
 
 function validateUrl(url: string) {
     try {
@@ -206,7 +206,7 @@ function CloudTab() {
                 </Grid>
 
                 <Divider className={Margins.top16} />
-            </section >
+            </Forms.FormSection>
             <SettingsSyncSection />
         </SettingsTab>
     );
