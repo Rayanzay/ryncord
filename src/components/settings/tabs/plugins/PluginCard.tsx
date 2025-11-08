@@ -94,49 +94,9 @@ export function PluginCard({ plugin, disabled, onRestartNeeded, onMouseEnter, on
         settings.enabled = !wasEnabled;
     }
 
-    const sourceBadge = isEquicordPlugin ? (
-        <img
-            src="https://blog-v2-46u.pages.dev/favicon.png"
-            alt="ryncord"
-            title="ryncord Plugin"
-            style={{
-                width: "20px",
-                height: "20px",
-                marginLeft: "8px",
-                borderRadius: "2px"
-            }}
-        />
-    ) : isUserplugin ? (
-        <img
-            src="https://equicord.org/assets/icons/userplugin.png"
-            alt="Userplugin"
-            title="Userplugin"
-            style={{
-                width: "20px",
-                height: "20px",
-                marginLeft: "8px",
-                borderRadius: "2px"
-            }}
-        />
-    ) : (
-        <img
-            src="https://vencord.dev/assets/favicon-dark.png"
-            alt="Vencord"
-            title="Vencord Plugin"
-            style={{
-                width: "20px",
-                height: "20px",
-                marginLeft: "8px",
-                borderRadius: "2px"
-            }}
-        />
-    );
-
     return (
         <AddonCard
             name={plugin.name}
-            sourceBadge={sourceBadge}
-            tooltip={tooltip}
             description={plugin.description}
             isNew={isNew}
             enabled={isEnabled()}
