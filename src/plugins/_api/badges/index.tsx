@@ -59,7 +59,7 @@ const EquicordContributorBadge: ProfileBadge = {
 
 const UserPluginContributorBadge: ProfileBadge = {
     description: "User Plugin Contributor",
-    iconSrc: USERPLUGIN_CONTRIBUTOR_BADGE,
+    iconSrc: EQUICORD_CONTRIBUTOR_BADGE,
     position: BadgePosition.START,
     shouldShow: ({ userId }) => {
         const allPlugins = Object.values(Plugins);
