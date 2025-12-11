@@ -57,7 +57,7 @@ function Updater() {
             <Heading>Updater Settings</Heading>
             <FormSwitch
                 title="Automatically update"
-                description="When enabled, Equicord will automatically download and install updates in the background without asking for confirmation. You'll need to restart Discord to apply the changes."
+                description="When enabled, ryncord will automatically download and install updates in the background without asking for confirmation. You'll need to restart Discord to apply the changes."
                 value={settings.autoUpdate}
                 onChange={(v: boolean) => settings.autoUpdate = v}
                 hideBorder
@@ -75,7 +75,7 @@ function Updater() {
 
             <Heading className={Margins.top20}>Repository</Heading>
             <Paragraph className={Margins.bottom8}>
-                This is the GitHub repository where Equicord fetches updates from.
+                This is the GitHub repository where ryncord fetches updates from.
             </Paragraph>
             <Paragraph color="text-subtle">
                 {repoPending

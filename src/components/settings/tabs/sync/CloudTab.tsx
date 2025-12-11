@@ -30,7 +30,7 @@ import { Link } from "@components/Link";
 import { Paragraph } from "@components/Paragraph";
 import { SettingsTab, wrapTab } from "@components/settings/tabs/BaseTab";
 import { Margins } from "@utils/margins";
-import { Alerts, Tooltip, useState } from "@webpack/common";
+import { Alerts, Forms, Tooltip, useState } from "@webpack/common";
 
 function validateUrl(url: string) {
     try {
