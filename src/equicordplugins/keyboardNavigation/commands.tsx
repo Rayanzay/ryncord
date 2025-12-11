@@ -10,7 +10,7 @@ import { gitHashShort } from "@shared/vencordUserAgent";
 import { copyToClipboard } from "@utils/clipboard";
 import { relaunch, showItemInFolder } from "@utils/native";
 import { checkForUpdates, getRepo } from "@utils/updater";
-import { GuildStore, NavigationRouter, SettingsRouter, Toasts } from "@webpack/common";
+import { GuildStore, NavigationRouter, openUserSettingsPanel, Toasts } from "@webpack/common";
 
 import gitRemote from "~git-remote";
 import Plugins from "~plugins";
@@ -140,7 +140,7 @@ export const actions: ButtonAction[] = [
                     permanent: true,
                     noPersist: true,
                     onClick() {
-                        SettingsRouter.open("EquicordUpdater");
+                        openUserSettingsPanel("equicord_updater");
                     }
                 }), 10_000);
             } else {

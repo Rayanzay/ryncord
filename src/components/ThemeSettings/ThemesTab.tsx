@@ -18,8 +18,11 @@
 
 import "./themesStyles.css";
 
+import { isPluginEnabled } from "@api/PluginManager";
 import { Settings, useSettings } from "@api/Settings";
 import { classNameFactory } from "@api/Styles";
+import { Button } from "@components/Button";
+import { Card } from "@components/Card";
 import { Divider } from "@components/Divider";
 import { ErrorCard } from "@components/ErrorCard";
 import { Flex } from "@components/Flex";
@@ -41,7 +44,7 @@ import { getThemeInfo, stripBOM, type UserThemeHeader } from "@utils/themes/bd";
 import { usercssParse } from "@utils/themes/usercss";
 import { getStylusWebStoreUrl } from "@utils/web";
 import { findLazy } from "@webpack";
-import { Alerts, Button, Card, React, showToast, TabBar, TextInput, Tooltip, useEffect, useMemo, useRef, useState } from "@webpack/common";
+import { Alerts, React, showToast, TabBar, TextInput, Tooltip, useEffect, useMemo, useRef, useState } from "@webpack/common";
 import type { ComponentType, Ref, SyntheticEvent } from "react";
 import type { UserstyleHeader } from "usercss-meta";
 
@@ -79,7 +82,7 @@ function Validator({ link, onValidate }: { link: string; onValidate: (valid: boo
             : "Valid!";
 
     return <Paragraph style={{
-        color: pending ? "var(--text-muted)" : err ? "var(--text-danger)" : "var(--status-positive)"
+        color: pending ? "var(--text-muted)" : err ? "var(--text-feedback-critical)" : "var(--status-positive)"
     }}>{text}</Paragraph>;
 }
 
@@ -102,7 +105,7 @@ interface UserCSSCardProps {
 
 function UserCSSThemeCard({ theme, enabled, onChange, onDelete, onSettingsReset }: UserCSSCardProps) {
     const missingPlugins = useMemo(() =>
-        theme.requiredPlugins?.filter(p => !Vencord.Plugins.isPluginEnabled(p)), [theme]);
+        theme.requiredPlugins?.filter(p => !isPluginEnabled(p)), [theme]);
 
     return (
         <AddonCard
@@ -170,7 +173,7 @@ function OtherThemeCard({ theme, enabled, onChange, onDelete, showDeleteButton, 
                 )
             }
             footer={
-                <Flex flexDirection="row" style={{ gap: "0.2em" }}>
+                <Flex flexDirection="row" gap="0.2em">
                     {!!theme.website && <Link href={theme.website}>Website</Link>}
                     {!!(theme.website && theme.invite) && " • "}
                     {!!theme.invite && (
@@ -466,7 +469,7 @@ function ThemesTab() {
         }));
 
         return (
-            <>;
+            <>
                 <section>
                     <Heading>Online Themes</Heading>
                     <Card className="vc-settings-theme-add-card">
@@ -517,7 +520,7 @@ function ThemesTab() {
     }
 
     return (
-        <SettingsTab title="Themes">
+        <SettingsTab>
             <TabBar
                 type="top"
                 look="brand"
@@ -559,7 +562,7 @@ export function CspErrorCard() {
     const allowUrl = async (url: string) => {
         const { origin: baseUrl, host } = new URL(url);
 
-        const result = await VencordNative.csp.requestAddOverride(baseUrl, ["connect-src", "img-src", "style-src", "font-src"], "Vencord Themes");
+        const result = await VencordNative.csp.requestAddOverride(baseUrl, ["connect-src", "img-src", "style-src", "font-src"], "Equicord Themes");
         if (result !== "ok") return;
 
         CspBlockedUrls.forEach(url => {
@@ -597,7 +600,7 @@ export function CspErrorCard() {
                         {i !== 0 && <Divider className={Margins.bottom8} />}
                         <div className="vc-settings-csp-row">
                             <Link href={url}>{url}</Link>
-                            <Button color={Button.Colors.PRIMARY} onClick={() => allowUrl(url)} disabled={isImgurHtmlDomain(url)}>
+                            <Button variant="secondary" onClick={() => allowUrl(url)} disabled={isImgurHtmlDomain(url)}>
                                 Allow
                             </Button>
                         </div>
@@ -620,7 +623,7 @@ export function CspErrorCard() {
 
 function UserscriptThemesTab() {
     return (
-        <SettingsTab title="Themes">
+        <SettingsTab>
             <Card className="vc-settings-card">
                 <Heading>Themes are not supported on the Userscript!</Heading>
 

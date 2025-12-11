@@ -8,11 +8,10 @@ import { Divider } from "@components/Divider";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { Heading } from "@components/Heading";
 import { Paragraph } from "@components/Paragraph";
+import { settings } from "@equicordplugins/channelTabs/util";
 import { IS_MAC } from "@utils/constants";
 import { Button, React, Text, useEffect, useRef, useState } from "@webpack/common";
 import { JSX } from "react";
-
-import { settings } from "../util";
 
 interface KeybindInputProps {
     label: string;
@@ -121,7 +120,7 @@ function KeybindInput({ label, description, settingKey, enabledKey }: KeybindInp
                     {description}
                 </Text>
                 {!isEnabled && (
-                    <Text variant="text-xs/normal" style={{ color: "var(--text-danger)" }}>
+                    <Text variant="text-xs/normal" style={{ color: "var(--text-feedback-critical)" }}>
                         This shortcut is currently disabled
                     </Text>
                 )}

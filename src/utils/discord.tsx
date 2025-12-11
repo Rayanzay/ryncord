@@ -16,11 +16,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { MessageObject } from "@api/MessageEvents";
-import { Channel, CloudUpload, Guild, GuildFeatures, Message, User } from "@vencord/discord-types";
-import { ChannelActionCreators, ChannelStore, ComponentDispatch, Constants, FluxDispatcher, GuildStore, i18n, IconUtils, InviteActions, MessageActions, RestAPI, SelectedChannelStore, SelectedGuildStore, UserProfileActions, UserProfileStore, UserSettingsActionCreators, UserUtils } from "@webpack/common";
+import type { MessageObject } from "@api/MessageEvents";
+import type { Channel, CloudUpload, Guild, GuildFeatures, Message, User } from "@vencord/discord-types";
+import { ChannelActionCreators, ChannelStore, ComponentDispatch, Constants, FluxDispatcher, GuildStore, i18n, IconUtils, InviteActions, MessageActions, RestAPI, SelectedChannelStore, SelectedGuildStore, Toasts, UserProfileActions, UserProfileStore, UserSettingsActionCreators, UserUtils } from "@webpack/common";
 import { Except } from "type-fest";
 
+import { copyToClipboard } from "./clipboard";
 import { runtimeHashMessageKey, runtimeHashMessageKeyLegacy } from "./intlHash";
 import { Logger } from "./Logger";
 import { MediaModalItem, MediaModalProps, openMediaModal } from "./modal";
@@ -116,6 +117,15 @@ export function insertTextIntoChatInputBox(text: string) {
     });
 }
 
+export async function copyWithToast(text: string, toastMessage = "Copied to clipboard!") {
+    await copyToClipboard(text);
+    Toasts.show({
+        message: toastMessage,
+        id: Toasts.genId(),
+        type: Toasts.Type.SUCCESS
+    });
+}
+
 interface MessageOptions {
     messageReference: Message["messageReference"];
     allowedMentions: {
@@ -197,9 +207,9 @@ interface FetchUserProfileOptions {
 /**
  * Fetch a user's profile
  */
-export async function fetchUserProfile(id: string, options?: FetchUserProfileOptions) {
+export async function fetchUserProfile(id: string, options?: FetchUserProfileOptions, cache = true) {
     const cached = UserProfileStore.getUserProfile(id);
-    if (cached) return cached;
+    if (cached && cache) return cached;
 
     FluxDispatcher.dispatch({ type: "USER_PROFILE_FETCH_START", userId: id });
 

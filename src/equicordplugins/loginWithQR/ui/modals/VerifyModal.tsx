@@ -6,6 +6,7 @@
 
 import { BaseText } from "@components/BaseText";
 import { Button, TextButton } from "@components/Button";
+import { images } from "@equicordplugins/loginWithQR/images";
 import { getIntlMessage } from "@utils/discord";
 import {
     ModalContent,
@@ -23,7 +24,6 @@ import {
     useState,
 } from "@webpack/common";
 
-import { images } from "../../images";
 import { cl } from "..";
 
 const { Controller } = findByPropsLazy("Controller");
@@ -137,7 +137,7 @@ function VerifyModal({
                         <BaseText
                             size="md"
                             weight="semibold"
-                            color="text-normal"
+                            color="text-default"
                             style={{ width: "30rem", textAlign: "center" }}
                         >
                             {getIntlMessage("QR_CODE_LOGIN_SUCCESS_FLAVOR")}
@@ -163,7 +163,7 @@ function VerifyModal({
                         <BaseText
                             size="md"
                             weight="semibold"
-                            color="text-normal"
+                            color="text-default"
                             style={{ width: "30rem" }}
                         >
                             {getIntlMessage("QR_CODE_NOT_FOUND_DESCRIPTION")}

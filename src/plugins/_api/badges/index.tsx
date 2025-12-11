@@ -22,8 +22,9 @@ import { _getBadges, BadgePosition, BadgeUserArgs, ProfileBadge } from "@api/Bad
 import ErrorBoundary from "@components/ErrorBoundary";
 import { openContributorModal } from "@components/settings/tabs";
 import { Devs } from "@utils/constants";
+import { copyWithToast } from "@utils/discord";
 import { Logger } from "@utils/Logger";
-import { copyWithToast, shouldShowContributorBadge, shouldShowEquicordContributorBadge } from "@utils/misc";
+import { shouldShowContributorBadge, shouldShowEquicordContributorBadge } from "@utils/misc";
 import definePlugin from "@utils/types";
 import { User } from "@vencord/discord-types";
 import { ContextMenuApi, Menu, Toasts, UserStore } from "@webpack/common";
@@ -62,10 +63,11 @@ const UserPluginContributorBadge: ProfileBadge = {
     iconSrc: EQUICORD_CONTRIBUTOR_BADGE,
     position: BadgePosition.START,
     shouldShow: ({ userId }) => {
+        if (!IS_DEV) return false;
         const allPlugins = Object.values(Plugins);
         return allPlugins.some(p => {
             const pluginMeta = PluginMeta[p.name];
-            return pluginMeta?.userPlugin && p.authors.some(a => a.id.toString() === userId) && IS_DEV;
+            return pluginMeta?.userPlugin && p.authors.some(a => a.id.toString() === userId);
         });
     },
     onClick: (_, { userId }) => openContributorModal(UserStore.getUser(userId)),
@@ -97,7 +99,7 @@ async function loadAllBadges(noCache = false) {
 
 let intervalId: any;
 
-function BadgeContextMenu({ badge }: { badge: ProfileBadge & BadgeUserArgs; }) {
+export function BadgeContextMenu({ badge }: { badge: ProfileBadge & BadgeUserArgs; }) {
     return (
         <Menu.Menu
             navId="vc-badge-context"
@@ -143,7 +145,7 @@ export default definePlugin({
                     replace: "...$1.props,$&"
                 },
                 {
-                    match: /(?<="aria-label":(\i)\.description,.{0,200})children:/,
+                    match: /(?<="aria-label":(\i)\.description,.{0,200}?)children:/g,
                     replace: "children:$1.component?$self.renderBadgeComponent({...$1}) :"
                 },
                 // handle onClick and onContextMenu

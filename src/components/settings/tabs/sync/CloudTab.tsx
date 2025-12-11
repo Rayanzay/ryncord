@@ -16,8 +16,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { showNotification } from "@api/Notifications";
-import { Settings, useSettings } from "@api/Settings";
+import { useSettings } from "@api/Settings";
+import { authorizeCloud, deauthorizeCloud } from "@api/SettingsSync/cloudSetup";
+import { deleteCloudSettings, eraseAllCloudData, getCloudSettings, putCloudSettings } from "@api/SettingsSync/cloudSync";
+import { Button } from "@components/Button";
+import { Card } from "@components/Card";
 import { CheckedTextInput } from "@components/CheckedTextInput";
 import { Divider } from "@components/Divider";
 import { FormSwitch } from "@components/FormSwitch";
@@ -26,10 +29,8 @@ import { Heading } from "@components/Heading";
 import { Link } from "@components/Link";
 import { Paragraph } from "@components/Paragraph";
 import { SettingsTab, wrapTab } from "@components/settings/tabs/BaseTab";
-import { authorizeCloud, cloudLogger, deauthorizeCloud, getCloudAuth, getCloudUrl } from "@utils/cloud";
 import { Margins } from "@utils/margins";
-import { deleteCloudSettings, getCloudSettings, putCloudSettings } from "@utils/settingsSync";
-import { Alerts, Button, Forms, Tooltip, useState } from "@webpack/common";
+import { Alerts, Tooltip, useState } from "@webpack/common";
 
 function validateUrl(url: string) {
     try {
@@ -38,32 +39,6 @@ function validateUrl(url: string) {
     } catch {
         return "Invalid URL";
     }
-}
-
-async function eraseAllData() {
-    const res = await fetch(new URL("/v1/", getCloudUrl()), {
-        method: "DELETE",
-        headers: { Authorization: await getCloudAuth() }
-    });
-
-    if (!res.ok) {
-        cloudLogger.error(`Failed to erase data, API returned ${res.status}`);
-        showNotification({
-            title: "Cloud Integrations",
-            body: `Could not erase all data (API returned ${res.status}), please contact support.`,
-            color: "var(--red-360)"
-        });
-        return;
-    }
-
-    Settings.cloud.authenticated = false;
-    await deauthorizeCloud();
-
-    showNotification({
-        title: "Cloud Integrations",
-        body: "Successfully erased all data.",
-        color: "var(--green-360)"
-    });
 }
 
 function SettingsSyncSection() {
@@ -87,7 +62,7 @@ function SettingsSyncSection() {
             />
             <div className="vc-cloud-settings-sync-grid">
                 <Button
-                    size={Button.Sizes.SMALL}
+                    size="small"
                     disabled={!sectionEnabled}
                     onClick={() => putCloudSettings(true)}
                 >
@@ -98,8 +73,8 @@ function SettingsSyncSection() {
                         <Button
                             onMouseLeave={onMouseLeave}
                             onMouseEnter={onMouseEnter}
-                            size={Button.Sizes.SMALL}
-                            color={Button.Colors.RED}
+                            size="small"
+                            variant="dangerPrimary"
                             disabled={!sectionEnabled}
                             onClick={() => getCloudSettings(true, true)}
                         >
@@ -108,8 +83,8 @@ function SettingsSyncSection() {
                     )}
                 </Tooltip>
                 <Button
-                    size={Button.Sizes.SMALL}
-                    color={Button.Colors.RED}
+                    size="small"
+                    variant="dangerPrimary"
                     disabled={!sectionEnabled}
                     onClick={() => deleteCloudSettings()}
                 >
@@ -155,7 +130,7 @@ function CloudTab() {
                             settings.cloud.authenticated = v;
                     }}
                 />
-                <Heading>Backend URL</Heading>
+                <Heading className={Margins.top16}>Backend URL</Heading>
                 <Paragraph className={Margins.bottom8}>
                     Which backend to use when using cloud integrations.
                 </Paragraph>
@@ -172,7 +147,7 @@ function CloudTab() {
 
                 <Grid columns={2} gap="1em" className={Margins.top8}>
                     <Button
-                        size={Button.Sizes.MEDIUM}
+                        size="medium"
                         disabled={!settings.cloud.authenticated}
                         onClick={async () => {
                             settings.cloud.authenticated = false;
@@ -183,13 +158,13 @@ function CloudTab() {
                         Reauthorize
                     </Button>
                     <Button
-                        size={Button.Sizes.MEDIUM}
-                        color={Button.Colors.RED}
+                        size="medium"
+                        variant="dangerPrimary"
                         disabled={!settings.cloud.authenticated}
                         onClick={() => Alerts.show({
                             title: "Are you sure?",
                             body: "Once your data is erased, we cannot recover it. There's no going back!",
-                            onConfirm: eraseAllData,
+                            onConfirm: eraseAllCloudData,
                             confirmText: "Erase it!",
                             confirmColor: "vc-cloud-erase-data-danger-btn",
                             cancelText: "Nevermind"
@@ -197,10 +172,10 @@ function CloudTab() {
                     >
                         Erase All Data
                     </Button>
-                    <Button size={Button.Sizes.MEDIUM} onClick={() => changeUrl("https://cloud.equicord.org/")}>
+                    <Button size="medium" onClick={() => changeUrl("https://cloud.equicord.org/")}>
                         Use Equicord's Cloud
                     </Button>
-                    <Button size={Button.Sizes.MEDIUM} onClick={() => changeUrl("https://api.vencord.dev/")}>
+                    <Button size="medium" onClick={() => changeUrl("https://api.vencord.dev/")}>
                         Use Vencord's Cloud
                     </Button>
                 </Grid>

@@ -53,7 +53,7 @@ const ProfilePopoutComponent = ErrorBoundary.wrap(
     },
     {
         noop: true,
-        fallback: () => <BaseText size="xs" weight="semibold" className="vc-github-repos-error" style={{ color: "var(--text-danger)" }}>
+        fallback: () => <BaseText size="xs" weight="semibold" className="vc-github-repos-error" style={{ color: "var(--text-feedback-critical)" }}>
             Error, Failed to render GithubRepos
         </BaseText>
     }
@@ -70,7 +70,7 @@ export default definePlugin({
         {
             find: ".hasAvatarForGuild(null==",
             replacement: {
-                match: /currentUser:\i,guild:\i\}\).{0,100}(?=\])/,
+                match: /currentUser:\i,guild:\i.{0,15}\}\).{0,100}(?=\])/,
                 replace: "$&,$self.ProfilePopoutComponent({ user: arguments[0].user, displayProfile: arguments[0].displayProfile })"
             }
         },

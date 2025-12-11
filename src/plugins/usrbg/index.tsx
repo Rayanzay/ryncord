@@ -16,11 +16,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { definePluginSettings, Settings } from "@api/Settings";
-import { Link } from "@components/Link";
+import "./styles.css";
+
+import { isPluginEnabled } from "@api/PluginManager";
+import { definePluginSettings } from "@api/Settings";
+import { classNameFactory } from "@api/Styles";
+import { Button } from "@components/Button";
+import fullVcPfp from "@equicordplugins/fullVcPfp";
 import { Devs } from "@utils/constants";
 import definePlugin, { OptionType } from "@utils/types";
 
+const cl = classNameFactory("vc-usrbg-");
 const API_URL = "https://usrbg.is-hardly.online/users";
 
 interface UsrbgApiReturn {
@@ -63,7 +69,7 @@ export default definePlugin({
         },
         {
             find: "\"data-selenium-video-tile\":",
-            predicate: () => !Settings.plugins.FullVCPFP.enabled && settings.store.voiceBackground,
+            predicate: () => !isPluginEnabled(fullVcPfp.name) && settings.store.voiceBackground,
             replacement: [
                 {
                     match: /(?<=function\((\i),\i\)\{)(?=let.{20,40},style:)/,
@@ -75,11 +81,15 @@ export default definePlugin({
 
     data: null as UsrbgApiReturn | null,
 
-    settingsAboutComponent: () => {
-        return (
-            <Link href="https://github.com/AutumnVN/usrbg#how-to-request-your-own-usrbg-banner">CLICK HERE TO GET YOUR OWN BANNER</Link>
-        );
-    },
+    settingsAboutComponent: () => (
+        <Button
+            variant="link"
+            className={cl("settings-button")}
+            onClick={() => VencordNative.native.openExternal("https://github.com/AutumnVN/usrbg#how-to-request-your-own-usrbg-banner")}
+        >
+            Get your own USRBG banner
+        </Button>
+    ),
 
     getVoiceBackgroundStyles({ className, participantUserId }: any) {
         if (className.includes("tile_")) {

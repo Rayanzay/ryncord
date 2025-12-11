@@ -14,7 +14,7 @@
             "esnext.symbol"
         ],
         "module": "esnext",
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
         "strict": true,
         "noImplicitAny": false,
         "target": "ESNEXT",
@@ -33,11 +33,17 @@
             "@utils/*": [
                 "./utils/*"
             ],
+            "@plugins/*": [
+                "./plugins/*"
+            ],
             "@shared/*": [
                 "./shared/*"
             ],
             "@webpack/common": [
                 "./webpack/common"
+            ],
+            "@webpack/common/*": [
+                "./webpack/common/*"
             ],
             "@webpack": [
                 "./webpack/webpack"
@@ -47,9 +53,6 @@
             ],
             "@webpack/wreq.d": [
                 "./webpack/wreq.d"
-            ],
-            "@plugins/*": [
-                "./plugins/*"
             ],
             "@equicordplugins/*": [
                 "./equicordplugins/*"

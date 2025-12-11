@@ -10,7 +10,6 @@ import { showNotification } from "@api/Notifications";
 import { addServerListElement, removeServerListElement, ServerListRenderPosition } from "@api/ServerList";
 import { ErrorBoundary, openPluginModal } from "@components/index";
 import { EquicordDevs } from "@utils/constants";
-import { getIntlMessage } from "@utils/index";
 import definePlugin, { StartAt } from "@utils/types";
 import { onceReady } from "@webpack";
 import { ContextMenuApi, Menu, NavigationRouter, useEffect, useState } from "@webpack/common";
@@ -18,7 +17,7 @@ import { JSX } from "react";
 
 import { addIgnoredQuest, addRerenderCallback, autoFetchCompatible, fetchAndAlertQuests, maximumAutoFetchIntervalValue, minimumAutoFetchIntervalValue, questIsIgnored, removeIgnoredQuest, rerenderQuests, settings, startAutoFetchingQuests, stopAutoFetchingQuests, validateAndOverwriteIgnoredQuests } from "./settings";
 import { ExcludedQuestMap, GuildlessServerListItem, Quest, QuestIcon, QuestMap, QuestStatus, RGB } from "./utils/components";
-import { adjustRGB, decimalToRGB, fetchAndDispatchQuests, formatLowerBadge, getFormattedNow, getIgnoredQuestIDs, getIntlMessageQuestify, getQuestStatus, isDarkish, leftClick, middleClick, normalizeQuestName, q, QuestifyLogger, questPath, QuestsStore, refreshQuest, reportPlayGameQuestProgress, reportVideoQuestProgress, rightClick, setIgnoredQuestIDs, waitUntilEnrolled } from "./utils/misc";
+import { adjustRGB, decimalToRGB, fetchAndDispatchQuests, formatLowerBadge, getFormattedNow, getIgnoredQuestIDs, getQuestStatus, isDarkish, leftClick, middleClick, normalizeQuestName, q, QuestifyLogger, questPath, QuestsStore, refreshQuest, reportPlayGameQuestProgress, reportVideoQuestProgress, rightClick, setIgnoredQuestIDs, waitUntilEnrolled } from "./utils/misc";
 
 const patchedMobileQuests = new Set<string>();
 export const activeQuestIntervals = new Map<string, { progressTimeout: NodeJS.Timeout; rerenderTimeout: NodeJS.Timeout; progress: number; duration: number, type: string; }>();
@@ -174,6 +173,18 @@ function shouldHideDirectMessagesTab(): boolean {
     ]);
 
     return disableQuestsDirectMessagesTab || disableQuestsEverything;
+}
+
+function shouldHideSponsoredQuestBanner(): boolean {
+    const {
+        disableQuestsPageSponsoredBanner,
+        disableQuestsEverything
+    } = settings.use([
+        "disableQuestsPageSponsoredBanner",
+        "disableQuestsEverything"
+    ]);
+
+    return disableQuestsPageSponsoredBanner || disableQuestsEverything;
 }
 
 function shouldHideBadgeOnUserProfiles(): boolean {
@@ -653,10 +664,10 @@ async function startPlayGameProgressTracking(quest: Quest, questDuration: number
         }
     }
 
-    reportPlayGameQuestProgress(quest, false, QuestifyLogger);
+    const initial = await reportPlayGameQuestProgress(quest, false, QuestifyLogger, { attempts: 3, delay: 2500 });
 
     const progressIntervalId = setInterval(async () => {
-        const result = await reportPlayGameQuestProgress(quest, false, QuestifyLogger);
+        const result = await reportPlayGameQuestProgress(quest, false, QuestifyLogger, { attempts: 3, delay: 2500 });
 
         if (result.progress === null) {
             clearInterval(progressIntervalId);
@@ -667,12 +678,14 @@ async function startPlayGameProgressTracking(quest: Quest, questDuration: number
 
         const isComplete = result.progress >= questDuration;
         const timeRemaining = questDuration - result.progress;
+        const intervalData = activeQuestIntervals.get(quest.id);
+        intervalData && (intervalData.progress = result.progress);
 
         if (isComplete) {
             clearInterval(progressIntervalId);
             clearTimeout(renderIntervalId);
             activeQuestIntervals.delete(quest.id);
-            const success = await reportPlayGameQuestProgress(quest, true, QuestifyLogger);
+            const success = await reportPlayGameQuestProgress(quest, true, QuestifyLogger, { attempts: 3, delay: 2500 });
 
             if (success) {
                 QuestifyLogger.info(`[${getFormattedNow()}] Quest ${questName} completed.`);
@@ -694,7 +707,7 @@ async function startPlayGameProgressTracking(quest: Quest, questDuration: number
 
             setTimeout(async () => {
                 activeQuestIntervals.delete(quest.id);
-                const success = await reportPlayGameQuestProgress(quest, true, QuestifyLogger);
+                const success = await reportPlayGameQuestProgress(quest, true, QuestifyLogger, { attempts: 3, delay: 2500 });
 
                 if (success) {
                     QuestifyLogger.info(`[${getFormattedNow()}] Quest ${questName} completed.`);
@@ -726,7 +739,7 @@ async function startPlayGameProgressTracking(quest: Quest, questDuration: number
         rerenderQuests();
     }, 1000);
 
-    activeQuestIntervals.set(quest.id, { progressTimeout: progressIntervalId, rerenderTimeout: renderIntervalId, progress: initialProgress, duration: questDuration, type: "play" });
+    activeQuestIntervals.set(quest.id, { progressTimeout: progressIntervalId, rerenderTimeout: renderIntervalId, progress: initial.progress || initialProgress, duration: questDuration, type: "play" });
 
     if (remaining > 0) {
         QuestifyLogger.info(`[${getFormattedNow()}] Quest ${questName} will be completed in the background in ${remaining} seconds.`);
@@ -759,7 +772,7 @@ function processQuestForAutoComplete(quest: Quest): boolean {
         return false;
     }
 
-    return true; // True means continue as normal, false means prevent default action.
+    return true; // true means continue as normal, false means prevent default action.
 }
 
 function shouldDisableQuestAcceptedButton(quest: Quest): boolean | null {
@@ -786,19 +799,15 @@ function getQuestAcceptedButtonText(quest: Quest): string | null {
     const taskType = playType || watchType;
     const duration = taskType?.target || 0;
     const intervalData = activeQuestIntervals.get(quest.id);
-    const progress = Math.min(
-        (intervalData?.progress ?? (quest.userStatus?.progress?.[taskType?.type || ""]?.value || 0)),
-        duration
-    );
+    const progress = Math.min((intervalData?.progress ?? (quest.userStatus?.progress?.[taskType?.type || ""]?.value || 0)), duration);
     const timeRemaining = Math.max(0, duration - progress);
     const progressFormatted = `${String(Math.floor(timeRemaining / 60)).padStart(2, "0")}:${String(timeRemaining % 60).padStart(2, "0")}`;
 
-    // TODO: Revert to using the built-in getIntlMessage once Discord has properly deployed the new system.
     if (questEnrolledAt && ((playType && completeGameQuestsInBackground) || (watchType && completeVideoQuestsInBackground))) {
         if (!!intervalData) {
-            return getIntlMessageQuestify("QUESTS_VIDEO_WATCH_RESUME_WITH_TIME_CTA", { remainTime: progressFormatted })[0].replace(getIntlMessage("GAME_LIBRARY_UPDATES_ACTION_RESUME"), getIntlMessage(playType ? "USER_ACTIVITY_PLAYING" : "USER_ACTIVITY_WATCHING"));
+            return timeRemaining ? `Completing (${progressFormatted})` : "Completing...";
         } else if (watchType || (playType && IS_DISCORD_DESKTOP)) {
-            return getIntlMessageQuestify("QUESTS_VIDEO_WATCH_RESUME_WITH_TIME_CTA", { remainTime: progressFormatted })[0];
+            return `Resume (~${progressFormatted})`;
         }
     }
 
@@ -818,7 +827,10 @@ function getQuestPanelOverride(): Quest | null {
 
         const timeRemaining = interval.duration - interval.progress;
 
-        if (timeRemaining < closestTimeRemaining) {
+        // 3 second buffer to account for per-second rerendering
+        // which could cause flickering if multiple Quests were
+        // started at the same time.
+        if (timeRemaining < (closestTimeRemaining - 3)) {
             closestTimeRemaining = timeRemaining;
             closestQuest = quest;
         }
@@ -868,21 +880,37 @@ function getLastSortChoice(): string | null {
 
 function getLastFilterChoices(): { group: string; filter: string; }[] | null {
     const { rememberQuestPageFilters, lastQuestPageFilters } = settings.store;
-    return rememberQuestPageFilters ? Object.values(lastQuestPageFilters) : null;
+    return rememberQuestPageFilters ? Object.values(lastQuestPageFilters).map(item => JSON.parse(JSON.stringify(item))) : null;
 }
 
 function setLastSortChoice(sort: string): void {
-    const { rememberQuestPageFilters } = settings.use(["rememberQuestPageFilters"]);
     settings.store.lastQuestPageSort = sort;
 }
 
 function setLastFilterChoices(filters: { group: string; filter: string; }[]): void {
-    const { rememberQuestPageFilters } = settings.use(["rememberQuestPageFilters"]);
     if (!filters || !Object.keys(filters).length || !Object.values(filters).every(f => f.group && f.filter)) { return; }
     settings.store.lastQuestPageFilters = JSON.parse(JSON.stringify(filters)).reduce((acc, item) => ({ ...acc, [item.filter]: item }), {});
 }
 
-function getQuestAcceptedButtonProps(quest: Quest, text: string) {
+function getQuestAcceptedButtonProps(quest: Quest, text: string, disabled: boolean, onClick?: () => void) {
+    const validTasks = [
+        "WATCH_VIDEO",
+        "WATCH_VIDEO_ON_MOBILE",
+        "PLAY_ON_DESKTOP",
+        "PLAY_ON_XBOX",
+        "PLAY_ON_PLAYSTATION",
+        "PLAY_ACTIVITY"
+    ];
+
+    if (!Array.from(validTasks).some(taskType => Object.values(quest.config.taskConfigV2?.tasks || {}).some(task => task.type === taskType))) {
+        return {
+            disabled: disabled,
+            text: text,
+            onClick: onClick,
+            icon: () => { }
+        };
+    }
+
     return {
         disabled: shouldDisableQuestAcceptedButton(quest) ?? true,
         text: getQuestAcceptedButtonText(quest) ?? text,
@@ -910,6 +938,7 @@ export default definePlugin({
     shouldHideDirectMessagesTab,
     shouldPreventFetchingQuests,
     shouldHideBadgeOnUserProfiles,
+    shouldHideSponsoredQuestBanner,
     shouldHideGiftInventoryRelocationNotice,
     shouldHideFriendsListActiveNowPromotion,
     shouldHideMembersListActivelyPlayingIcon,
@@ -936,7 +965,7 @@ export default definePlugin({
         },
         {
             // Hides Quests tab in the Discovery page.
-            find: "GlobalDiscoverySidebar",
+            find: "GLOBAL_DISCOVERY_SIDEBAR},",
             replacement: [
                 {
                     match: /(GLOBAL_DISCOVERY_TABS).map/,
@@ -949,8 +978,23 @@ export default definePlugin({
             find: "QUEST_HOME_V2):",
             replacement: [
                 {
-                    match: /(?<="family-center"\):null,\i)/,
-                    replace: "||$self.shouldHideDirectMessagesTab()"
+                    match: /(?<="family-center"\):null,)(\i)/,
+                    replace: "$self.shouldHideDirectMessagesTab()||$1"
+                }
+            ]
+        },
+        {
+            // Hides the sponsored banner on the Quests page.
+            find: "{isInDiscoverQuestHomeTab:",
+            group: true,
+            replacement: [
+                {
+                    match: /(?<=resetSortingFiltering\(\)},\[\]\);)/,
+                    replace: "const shouldHideSponsoredQuestBanner=$self.shouldHideSponsoredQuestBanner();"
+                },
+                {
+                    match: /(?<=if\(null!=\i\))return(.{0,60}?}\))/,
+                    replace: "if(!shouldHideSponsoredQuestBanner)return $1"
                 }
             ]
         },
@@ -1075,7 +1119,7 @@ export default definePlugin({
         },
         {
             // Adds a maxDigits prop to the LowerBadge component which allows for not truncating, or for truncating at a specific threshold.
-            find: "STATUS_DANGER,disableColor",
+            find: '"renderBadgeCount"])',
             group: true,
             replacement: [
                 {
@@ -1139,7 +1183,7 @@ export default definePlugin({
         },
         {
             // Adds the "Questify" sort option to the sort dropdown.
-            find: "NOT_SHAREABLE}",
+            find: '" has no rewards configured"',
             replacement: {
                 match: /(?=case (\i.\i).SUGGESTED)/,
                 replace: "case $1.QUESTIFY:return \"Questify\";"
@@ -1152,7 +1196,7 @@ export default definePlugin({
                 {
                     // Run Questify's sort function every time due to hook requirements but return
                     // early if not applicable. If the sort method is set to "Questify", replace the
-                    // quests with the sorted ones. Also, setup a trigger to rerender the memo.
+                    // Quests with the sorted ones. Also, setup a trigger to rerender the memo.
                     match: /(?<=function \i\((\i),\i\){let \i=\i.useRef.{0,100}?;)(return \i.useMemo\(\(\)=>{)/,
                     replace: "const questRerenderTrigger=$self.useQuestRerender();const questifySorted=$self.sortQuests($1,arguments[1].sortMethod!==\"questify\");$2if(arguments[1].sortMethod===\"questify\"){$1=questifySorted;};"
                 },
@@ -1163,7 +1207,7 @@ export default definePlugin({
                 },
                 {
                     // If we already applied Questify's sort, skip further sorting.
-                    match: /(?<=(\i)\)\);)(return )((\i).sort)/,
+                    match: /(?<=sortMethod:(\i).{0,100}?\)\);)(return )((\i).sort)/,
                     replace: "$2$1===\"questify\"?$4:$3"
                 },
                 {
@@ -1186,7 +1230,7 @@ export default definePlugin({
                 },
                 {
                     // Set the initial filters.
-                    match: /(useState\()(\i\),{quests)/,
+                    match: /(get\(\i\)\)\)\?\i:)(\i)/,
                     replace: "$1$self.getLastFilterChoices()??$2"
                 },
                 {
@@ -1201,8 +1245,8 @@ export default definePlugin({
                 },
                 {
                     // Update the last used sort and filter choices when the toggle setting for either is changed.
-                    match: /(\[(\i),\i\]=\i.useState.{0,80}?\[(\i),\i\]=\i.useState.{0,350}?)(return \i.useEffect)/,
-                    replace: "$1$self.setLastSortChoice($2);$self.setLastFilterChoices($3);$4"
+                    match: /(?<=ALL,\i.useMemo\(\(\)=>\()({sortMethod:(\i),filters:(\i))/,
+                    replace: "$self.setLastSortChoice($2),$self.setLastFilterChoices($3),$1"
                 }
             ]
         },
@@ -1253,7 +1297,7 @@ export default definePlugin({
                 },
                 {
                     // Add the trigger to the memo for rerendering the progress label.
-                    match: /(\i.intl.string\(\i.\i#{intl::QUESTS_SEE_CODE}\)}\)}},\[)/,
+                    match: /(\i\.intl\.string\(\i\.\i#{intl::QUESTS_SEE_CODE}\)\}\)\}\},\[|\)\}\}\},\[)/,
                     replace: "$1questRerenderTrigger,"
                 },
                 {
@@ -1280,7 +1324,7 @@ export default definePlugin({
             replacement: [
                 {
                     // Initial and subsequent select drop down for picking or changing a platform.
-                    match: /(#{intl::QUEST_MULTIPLATFORM_SELECT_SUBTITLE}.{0,50}select:)(\i)(,serialize:\i=>{)/g,
+                    match: /(select:)(\i)(,serialize:\i=>{)/g,
                     replace: "$1(platform)=>{$self.processQuestForAutoComplete(arguments[0].quest),$2(platform)}$3"
                 },
                 {
@@ -1289,13 +1333,13 @@ export default definePlugin({
                     // The "Quest Accepted" text is changed to "Resume" if the Quest is in progress but not active.
                     // Then, when the Quest Accepted button is clicked, resume the automatic completion of the
                     // Quest and disable the button again.
-                    match: /(?<=fullWidth:!0}\)}\):.{0,200}?secondary",)disabled:!0,text:(.{0,30}?#{intl::QUEST_ACCEPTED}\)),/,
-                    replace: "...$self.getQuestAcceptedButtonProps(arguments[0].quest,$1),"
+                    match: /(?<=secondary",)disabled:(!0),text:(\i\.intl\.string\(\i\.\i#{intl::QUEST_ACCEPTED}\)),/,
+                    replace: "...$self.getQuestAcceptedButtonProps(arguments[0].quest,$2,$1,undefined),"
                 },
                 {
                     // Does the above for resuming Play Activity Quests.
-                    match: /(?<=icon:.{0,35}?onClick:.{0,20}?,text:(\i),fullWidth:!0)/,
-                    replace: ",...$self.getQuestAcceptedButtonProps(arguments[0].quest,$1)"
+                    match: /(?<=icon:.{0,35}?onClick:(.{0,20}?),text:(\i),fullWidth:!0)/,
+                    replace: ",...$self.getQuestAcceptedButtonProps(arguments[0].quest,$2,false,$1)"
                 }
             ]
         },
@@ -1394,5 +1438,11 @@ export default definePlugin({
     stop() {
         removeServerListElement(ServerListRenderPosition.Above, this.renderQuestifyButton);
         stopAutoFetchingQuests();
+
+        activeQuestIntervals.forEach((intervalData, questId) => {
+            clearInterval(intervalData.progressTimeout);
+            clearTimeout(intervalData.rerenderTimeout);
+            activeQuestIntervals.delete(questId);
+        });
     }
 });
