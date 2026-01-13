@@ -106,8 +106,8 @@ export default definePlugin({
             find: 'tutorialId:"whos-online',
             replacement: [
                 {
-                    match: /null,\i," — ",\i\]/,
-                    replace: "null,$self.RoleGroupColor(arguments[0])]"
+                    match: /(?<=\.roleIcon.{0,15}:null,).{0,150}— ",\i\]\}\)\]/,
+                    replace: "$self.RoleGroupColor(arguments[0])]"
                 },
             ],
             predicate: () => settings.store.memberList
@@ -146,7 +146,7 @@ export default definePlugin({
         {
             find: ",reactionVoteCounts",
             replacement: {
-                match: /\.nickname,(?=children:)/,
+                match: /\.name,(?="aria-label)/,
                 replace: "$&style:$self.getColorStyle(arguments[0]?.user?.id,arguments[0]?.channel?.id),"
             },
             predicate: () => settings.store.pollResults
@@ -198,12 +198,15 @@ export default definePlugin({
             const { messageSaturation } = settings.use(["messageSaturation"]);
             const author = useMessageAuthor(message);
 
+            // Do not apply role color if the send fails, otherwise it becomes indistinguishable if the message is sent
+            if (message.state !== "SENT") return;
+
             if (author.colorString != null && messageSaturation !== 0) {
                 const value = `color-mix(in oklab, ${author.colorString} ${messageSaturation}%, var({DEFAULT}))`;
 
                 return {
                     color: value.replace("{DEFAULT}", "--text-default"),
-                    "--header-primary": value.replace("{DEFAULT}", "--header-primary"),
+                    "--text-strong": value.replace("{DEFAULT}", "--text-strong"),
                     "--text-muted": value.replace("{DEFAULT}", "--text-muted")
                 };
             }

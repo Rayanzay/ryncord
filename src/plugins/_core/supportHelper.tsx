@@ -28,6 +28,7 @@ import { Link } from "@components/Link";
 import { Paragraph } from "@components/Paragraph";
 import { openSettingsTabModal, UpdaterTab } from "@components/settings";
 import { platformName } from "@equicordplugins/equicordHelper/utils";
+import customIdle from "@plugins/customIdle";
 import { gitHash, gitHashShort } from "@shared/vencordUserAgent";
 import { CONTRIB_ROLE_ID, Devs, DONOR_ROLE_ID, EQUIBOP_CONTRIB_ROLE_ID, EQUICORD_TEAM, GUILD_ID, SUPPORT_CHANNEL_ID, SUPPORT_CHANNEL_IDS, VC_CONTRIB_ROLE_ID, VC_DONOR_ROLE_ID, VC_GUILD_ID, VC_REGULAR_ROLE_ID, VENCORD_CONTRIB_ROLE_ID } from "@utils/constants";
 import { sendMessage } from "@utils/discord";
@@ -63,6 +64,16 @@ const AsyncFunction = async function () { }.constructor;
 const ShowCurrentGame = getUserSettingLazy<boolean>("status", "showCurrentGame")!;
 const ShowEmbeds = getUserSettingLazy<boolean>("textAndImages", "renderEmbeds")!;
 
+interface clientData {
+    name: string;
+    version?: string | null | undefined;
+    info?: string | boolean | null | undefined;
+    spoofed?: string | null | undefined;
+    shortHash?: string | null | undefined;
+    hash?: string | null | undefined;
+    dev?: boolean | null | undefined;
+}
+
 async function forceUpdate() {
     const outdated = await checkForUpdates();
     if (outdated) {
@@ -72,31 +83,70 @@ async function forceUpdate() {
     return outdated;
 }
 
+export function detectClient(): clientData {
+    if (IS_DISCORD_DESKTOP) {
+        return {
+            name: "Discord Desktop",
+            version: DiscordNative.app.getVersion(),
+        };
+    }
+    if (IS_VESKTOP) return {
+        name: "Vesktop",
+        version: VesktopNative.app.getVersion(),
+    };
+
+    if (IS_EQUIBOP) {
+        const equibopGitHash = tryOrElse(() => VesktopNative.app.getGitHash?.(), null);
+        const spoofInfo = tryOrElse(() => VesktopNative.app.getPlatformSpoofInfo?.(), null);
+        const isDevBuild = tryOrElse(() => VesktopNative.app.isDevBuild?.(), false);
+        const shortHash = equibopGitHash?.slice(0, 7);
+        return {
+            name: "Equibop",
+            version: VesktopNative.app.getVersion(),
+            spoofed: spoofInfo?.spoofed ? `${platformName()} (spoofed from ${spoofInfo.originalPlatform})` : null,
+            dev: isDevBuild,
+            shortHash: shortHash,
+            hash: equibopGitHash,
+        };
+    }
+
+    if ("legcord" in window) return {
+        name: "LegCord",
+        version: window.legcord.version,
+    };
+
+    if ("goofcord" in window) return {
+        name: "GoofCord",
+        version: window.goofcord.version,
+    };
+
+    const name = typeof unsafeWindow !== "undefined" ? "UserScript" : "Web";
+    return {
+        name: name,
+        info: navigator.userAgent
+    };
+}
+
 async function generateDebugInfoMessage() {
     const { RELEASE_CHANNEL } = window.GLOBAL_ENV;
 
-    const client = (() => {
-        if (IS_DISCORD_DESKTOP) return `Discord Desktop v${DiscordNative.app.getVersion()}`;
-        if (IS_VESKTOP) return `Vesktop v${VesktopNative.app.getVersion()}`;
-        if (IS_EQUIBOP) {
-            const equibopGitHash = tryOrElse(() => VesktopNative.app.getGitHash?.(), null);
-            if (equibopGitHash) {
-                const shortHash = equibopGitHash.slice(0, 7);
-                return `Equibop v${VesktopNative.app.getVersion()} • [${shortHash}](<https://github.com/Equicord/Equibop/commit/${equibopGitHash}>)`;
-            }
-            return `Equibop v${VesktopNative.app.getVersion()}`;
-        }
-        if ("legcord" in window) return `LegCord v${window.legcord.version}`;
-        const name = "Web";
-        return `${name} (${navigator.userAgent})`;
-    })();
+    const clientInfo = detectClient();
+    let clientString = `${clientInfo.name}`;
+    clientString += `${clientInfo.version ? ` v${clientInfo.version}` : ""}`;
+    clientString += `${clientInfo.info ? ` • ${clientInfo.info}` : ""}`;
+    clientString += `${clientInfo.shortHash ? ` • [${clientInfo.shortHash}](<https://github.com/Rayanzay/ryncord/commit/${clientInfo.hash}>)` : ""}`;
+
+    const spoofInfo = IS_EQUIBOP ? tryOrElse(() => VesktopNative.app.getPlatformSpoofInfo?.(), null) : null;
+    const platformDisplay = spoofInfo?.spoofed
+        ? `${platformName()} (spoofed from ${spoofInfo.originalPlatform})`
+        : platformName();
 
     const info = {
         ryncord:
-            `v${VERSION} • [${gitHash}](<https://github.com/Rayanzay/ryncord/commit/${gitHash}>)` +
-            `${SettingsPlugin.additionalInfo} - ${Intl.DateTimeFormat("en-GB", { dateStyle: "medium" }).format(BUILD_TIMESTAMP)}`,
-        Client: `${RELEASE_CHANNEL} ~ ${client}`,
-        Platform: platformName()
+            `v${VERSION} • [${gitHashShort}](<https://github.com/Rayanzay/ryncord/commit/${gitHash}>)` +
+            `${IS_EQUIBOP ? "" : SettingsPlugin.getVersionInfo()} - ${Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(BUILD_TIMESTAMP)}`,
+        Client: `${RELEASE_CHANNEL} ~ ${clientString}`,
+        Platform: platformDisplay
     };
 
     if (IS_DISCORD_DESKTOP) {
@@ -106,19 +156,23 @@ async function generateDebugInfoMessage() {
     const potentiallyProblematicPlugins = ([
         "NoRPC", "NoProfileThemes", "NoMosaic", "NoRoleHeaders", "NoSystemBadge",
         "AlwaysAnimate", "ClientTheme", "SoundTroll", "Ingtoninator", "NeverPausePreviews",
-    ].filter(Vencord.Plugins.isPluginEnabled) ?? []).sort();
+        "IdleAutoRestart",
+    ].filter(isPluginEnabled) ?? []).sort();
 
-    if (Vencord.Plugins.isPluginEnabled("CustomIdle") && Vencord.Settings.plugins.CustomIdle.idleTimeout === 0) {
-        potentiallyProblematicPlugins.push("CustomIdle");
+    if (isPluginEnabled(customIdle.name) && customIdle.settings.store.idleTimeout === 0) {
+        potentiallyProblematicPlugins.push(customIdle.name);
     }
+
+    const potentiallyProblematicPluginsNote = "-# Note: These plugins might not be the cause of your problem. They are simply plugins that cause common issues.";
 
     const commonIssues = {
         "Activity Sharing Disabled": tryOrElse(() => !ShowCurrentGame.getSetting(), false),
         "Link Embeds Disabled": tryOrElse(() => !ShowEmbeds.getSetting(), false),
         "Equibop DevBuild": IS_EQUIBOP && tryOrElse(() => VesktopNative.app.isDevBuild?.(), false),
+        "Platform Spoofed": spoofInfo?.spoofed ?? false,
         "Has UserPlugins": Object.values(PluginMeta).some(m => m.userPlugin),
         ">2 Weeks Outdated": BUILD_TIMESTAMP < Date.now() - 12096e5,
-        [`Potentially Problematic Plugins: ${potentiallyProblematicPlugins.join(", ")}`]: potentiallyProblematicPlugins.length
+        [`Potentially Problematic Plugins: ${potentiallyProblematicPlugins.join(", ")}\n${potentiallyProblematicPluginsNote}`]: potentiallyProblematicPlugins.length
     };
 
     let content = `>>> ${Object.entries(info).map(([k, v]) => `**${k}**: ${v}`).join("\n")}`;
@@ -150,9 +204,6 @@ function generatePluginList() {
         Alerts.show({
             title: "You are attempting to get support!",
             body: <div>
-                <style>
-                    {'[class*="backdrop_"][style*="backdrop-filter"]{backdrop-filter:blur(16px) brightness(0.25) !important;}'}
-                </style>
                 <div style={{ display: "flex", justifyContent: "center", marginBottom: "1rem" }}>
                     <img src="https://media.tenor.com/QtGqjwBpRzwAAAAi/wumpus-dancing.gif" />
                 </div>

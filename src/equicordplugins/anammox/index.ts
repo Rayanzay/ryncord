@@ -15,6 +15,12 @@ export const settings = definePluginSettings({
         description: "Remove shops above DMs list",
         restartNeeded: true,
     },
+    quests: {
+        type: OptionType.BOOLEAN,
+        default: false,
+        description: "Remove quests above DMs list",
+        restartNeeded: true,
+    },
     serverBoost: {
         type: OptionType.BOOLEAN,
         default: true,
@@ -53,15 +59,21 @@ export default definePlugin({
             find: 'tutorialId:"direct-messages"',
             replacement: [
                 {
-                    match: /NAVIGATION_LINK\}\}\}\)(?=,\i(&&\(|\]))/,
+                    match: /"nitro-tab-group"\)/,
                     replace: "$&&&undefined",
+                    predicate: () => settings.store.dms
                 },
                 {
-                    match: /NAVIGATION_LINK\}\}\}.{0,20}\)(?=,\i&&!\i)/,
+                    match: /"discord-shop"\)/,
                     replace: "$&&&undefined",
+                    predicate: () => settings.store.dms
+                },
+                {
+                    match: /"quests"\)/,
+                    replace: "$&&&undefined",
+                    predicate: () => settings.store.quests
                 },
             ],
-            predicate: () => settings.store.dms,
         },
         {
             // Above DMs, keyboard nav
@@ -89,17 +101,11 @@ export default definePlugin({
         },
         {
             // Settings, sidebar
-            find: "#{intl::BILLING_SETTINGS}",
-            replacement: [
-                {
-                    match: /(?<=#{intl::BILLING_SETTINGS}[^,]*?,)(?=div)/,
-                    replace: "capitalism:true,"
-                },
-                {
-                    match: /\i\?\i:\i\.toSpliced\(3,0,\i\)/,
-                    replace: "($&).filter(e=>!e.capitalism)",
-                },
-            ],
+            find: ".BILLING_SECTION,",
+            replacement: {
+                match: /(?<=buildLayout:\(\)=>)\[.+?\]/,
+                replace: "[]",
+            },
             predicate: () => settings.store.billing,
         },
         {

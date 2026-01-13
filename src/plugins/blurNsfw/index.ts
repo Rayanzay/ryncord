@@ -5,15 +5,17 @@
  */
 
 import { definePluginSettings } from "@api/Settings";
+import { managedStyleRootNode } from "@api/Styles";
 import { Devs } from "@utils/constants";
+import { createAndAppendStyle } from "@utils/css";
 import definePlugin, { OptionType } from "@utils/types";
 
 let style: HTMLStyleElement;
 
 function setCss() {
     style.textContent = `
-        .vc-nsfw-img [class^=imageContainer],
-        .vc-nsfw-img [class^=wrapperPaused] {
+        .vc-nsfw-img [class*=imageContainer],
+        .vc-nsfw-img [class*=wrapperPaused] {
             filter: blur(${settings.store.blurAmount}px);
             transition: filter 0.2s;
 
@@ -56,9 +58,7 @@ export default definePlugin({
     ],
 
     start() {
-        style = document.createElement("style");
-        style.id = "VcBlurNsfw";
-        document.head.appendChild(style);
+        style = createAndAppendStyle("VcBlurNsfw", managedStyleRootNode);
 
         setCss();
     },

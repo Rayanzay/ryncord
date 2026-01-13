@@ -4,11 +4,14 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import { ApplicationCommandInputType, sendBotMessage } from "@api/Commands";
+import { isPluginEnabled } from "@api/PluginManager";
 import { definePluginSettings } from "@api/Settings";
+import customRPC from "@plugins/customRPC";
 import { Devs, EquicordDevs, GUILD_ID, SUPPORT_CHANNEL_ID, SUPPORT_CHANNEL_IDS, VC_SUPPORT_CHANNEL_IDS } from "@utils/constants";
 import { isAnyPluginDev } from "@utils/misc";
 import definePlugin, { OptionType } from "@utils/types";
-import { Alerts, NavigationRouter, UserStore } from "@webpack/common";
+import { Alerts, ApplicationCommandIndexStore, NavigationRouter, UserStore } from "@webpack/common";
 
 import { PluginButtons } from "./pluginButtons";
 import { PluginCards } from "./pluginCards";
@@ -16,28 +19,47 @@ import { PluginCards } from "./pluginCards";
 let clicked = false;
 
 const settings = definePluginSettings({
-    disableDMContextMenu: {
-        type: OptionType.BOOLEAN,
-        description: "Disables the DM list context menu in favor of the x button",
-        restartNeeded: true,
-        default: false
-    },
     noMirroredCamera: {
         type: OptionType.BOOLEAN,
         description: "Prevents the camera from being mirrored on your screen",
+        restartNeeded: true,
         default: false,
     },
     removeActivitySection: {
         type: OptionType.BOOLEAN,
         description: "Removes the activity section above member list",
+        restartNeeded: true,
         default: false,
+    },
+    showYourOwnActivityButtons: {
+        type: OptionType.BOOLEAN,
+        description: "Discord hides your own activity buttons for some reason",
+        restartNeeded: true,
+        default: false,
+    },
+    noDefaultHangStatus: {
+        type: OptionType.BOOLEAN,
+        description: "Disable the default hang status when joining voice channels",
+        restartNeeded: true,
+        default: false,
+    },
+    refreshSlashCommands: {
+        type: OptionType.BOOLEAN,
+        description: "Refreshes Slash Commands to show newly added commands without restarting your client.",
+        default: false,
+    },
+    forceRoleIcon: {
+        type: OptionType.BOOLEAN,
+        description: "Forces role icons to display next to messages in compact mode",
+        restartNeeded: true,
+        default: false
     }
 });
 
 export default definePlugin({
     name: "EquicordHelper",
     description: "Used to provide support, fix discord caused crashes, and other misc features.",
-    authors: [Devs.thororen, EquicordDevs.nyx, EquicordDevs.Naibuu],
+    authors: [Devs.thororen, EquicordDevs.nyx, EquicordDevs.Naibuu, EquicordDevs.keyages, EquicordDevs.SerStars, EquicordDevs.mart],
     required: true,
     settings,
     patches: [
@@ -54,16 +76,6 @@ export default definePlugin({
                     replace: "return $1;"
                 }
             ]
-        },
-        // Remove DM Context Menu
-        {
-            find: "#{intl::DM_OPTIONS}",
-            predicate: () => settings.store.disableDMContextMenu,
-
-            replacement: {
-                match: /\{dotsInsteadOfCloseButton:(\i),rearrangeContextMenu:(\i).*?autoTrackExposure:!0\}\)/,
-                replace: "$1=false,$2=false"
-            },
         },
         // When focused on voice channel or group chat voice call
         {
@@ -102,6 +114,23 @@ export default definePlugin({
                 replace: "true||$&"
             },
         },
+        {
+            find: ".buttons.length)>=1",
+            predicate: () => settings.store.showYourOwnActivityButtons && !isPluginEnabled(customRPC.name),
+            replacement: {
+                match: /.getId\(\)===\i.id/,
+                replace: "$& && false"
+            }
+        },
+        // No Default Hang Status
+        {
+            find: ".CHILLING)",
+            predicate: () => settings.store.noDefaultHangStatus,
+            replacement: {
+                match: /{enableHangStatus:(\i),/,
+                replace: "{_enableHangStatus:$1=false,"
+            }
+        },
         // Always show open legacy settings
         ...[
             ".DEVELOPER_SECTION,",
@@ -115,6 +144,15 @@ export default definePlugin({
                 },
             ]
         })),
+        // Force Role Icon
+        {
+            find: "Message Username",
+            predicate: () => settings.store.forceRoleIcon,
+            replacement: {
+                match: /(?<=\.badgesContainer.{0,150}\?2:)0(?=\})/,
+                replace: "1"
+            }
+        },
     ],
     renderMessageAccessory(props) {
         return (
@@ -146,5 +184,23 @@ export default definePlugin({
                 });
             }
         },
-    }
+    },
+    commands: [
+        {
+            name: "refresh-commands",
+            description: "Refresh Slash Commands",
+            inputType: ApplicationCommandInputType.BUILT_IN,
+            predicate: () => settings.store.refreshSlashCommands,
+            execute: async (opts, ctx) => {
+                try {
+                    ApplicationCommandIndexStore.indices = {};
+                    sendBotMessage(ctx.channel.id, { content: "Slash Commands refreshed successfully." });
+                }
+                catch (e) {
+                    console.error("[refreshSlashCommands] Failed to refresh commands:", e);
+                    sendBotMessage(ctx.channel.id, { content: "Failed to refresh commands. Check console for details." });
+                }
+            }
+        }
+    ]
 });
