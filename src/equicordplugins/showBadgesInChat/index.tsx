@@ -4,14 +4,16 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import "./styles.css";
+
 import { Devs, EquicordDevs } from "@utils/constants";
 import { isEquicordPluginDev, isPluginDev } from "@utils/misc";
 import definePlugin from "@utils/types";
-import { findByPropsLazy, findComponentByCodeLazy } from "@webpack";
+import { findComponentByCodeLazy, findCssClassesLazy } from "@webpack";
 import badges from "plugins/_api/badges";
-const roleIconClassName = findByPropsLazy("roleIcon", "separator").roleIcon;
+
+const { roleIcon } = findCssClassesLazy("roleIcon", "separator");
 const RoleIconComponent = findComponentByCodeLazy("#{intl::ROLE_ICON_ALT_TEXT}");
-import "./styles.css";
 
 import { User } from "@vencord/discord-types";
 import { JSX } from "react";
@@ -41,7 +43,7 @@ function CheckBadge({ badge, author }: { badge: string; author: User; }): JSX.El
                     {badges.getEquicordDonorBadges(author.id)?.map(badge => (
                         <RoleIconComponent
                             key={author.id}
-                            className={roleIconClassName}
+                            className={roleIcon}
                             name={badge.description}
                             size={20}
                             src={badge.iconSrc}
@@ -53,7 +55,7 @@ function CheckBadge({ badge, author }: { badge: string; author: User; }): JSX.El
             return isEquicordPluginDev(author.id) ? (
                 <span style={{ order: settings.store.EquicordContributorPosition }}>
                     <RoleIconComponent
-                        className={roleIconClassName}
+                        className={roleIcon}
                         name="Equicord Contributor"
                         size={20}
                         src={"https://equicord.org/assets/favicon.png"}
@@ -66,7 +68,7 @@ function CheckBadge({ badge, author }: { badge: string; author: User; }): JSX.El
                     {badges.getDonorBadges(author.id)?.map(badge => (
                         <RoleIconComponent
                             key={author.id}
-                            className={roleIconClassName}
+                            className={roleIcon}
                             name={badge.description}
                             size={20}
                             src={badge.iconSrc}
@@ -78,8 +80,8 @@ function CheckBadge({ badge, author }: { badge: string; author: User; }): JSX.El
             return isPluginDev(author.id) ? (
                 <span style={{ order: settings.store.VencordContributorPosition }}>
                     <RoleIconComponent
-                        className={roleIconClassName}
-                        name="ryncord guy"
+                        className={roleIcon}
+                        name="Vencord Contributor"
                         size={20}
                         src={"https://blog-v2-46u.pages.dev/favicon.png"}
                     />
@@ -90,8 +92,8 @@ function CheckBadge({ badge, author }: { badge: string; author: User; }): JSX.El
                 .filter(badge => (author.flags || author.publicFlags) & (1 << badge[0]))
                 .map(badge => (
                     <RoleIconComponent
-                        key={badge[0]}
-                        className={roleIconClassName}
+                        key={author.id}
+                        className={roleIcon}
                         name={badge[1]}
                         size={20}
                         src={`https://cdn.discordapp.com/badge-icons/${badge[2]}.png`}
@@ -106,7 +108,7 @@ function CheckBadge({ badge, author }: { badge: string; author: User; }): JSX.El
             return (author?.premiumType ?? 0) > 0 ? (
                 <span style={{ order: settings.store.DiscordNitroPosition }}>
                     <RoleIconComponent
-                        className={roleIconClassName}
+                        className={roleIcon}
                         name={
                             "Discord Nitro" +
                             (author.premiumType === 3 ? " Basic" : author.premiumType === 1 ? " Classic" : "")
