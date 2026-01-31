@@ -367,16 +367,19 @@ const settings = definePluginSettings({
         type: OptionType.STRING,
         description: "Comma-separated list of user IDs to ignore",
         default: "",
+        multiline: true,
     },
     ignoreChannels: {
         type: OptionType.STRING,
         description: "Comma-separated list of channel IDs to ignore",
         default: "",
+        multiline: true,
     },
     ignoreGuilds: {
         type: OptionType.STRING,
         description: "Comma-separated list of guild IDs to ignore",
         default: "",
+        multiline: true,
     },
     showEditDiffs: {
         type: OptionType.BOOLEAN,
@@ -752,7 +755,7 @@ export default definePlugin({
 
         {
             // Attachment renderer
-            find: ".Types.ATTACHMENT,inline:",
+            find: "#{intl::REMOVE_ATTACHMENT_TOOLTIP_TEXT}",
             replacement: [
                 {
                     match: /\.SPOILER,(?=\[\i\.\i\]:)/,
@@ -779,7 +782,7 @@ export default definePlugin({
             find: ".SEND_FAILED,",
             replacement: {
                 // Render editHistory behind the message content
-                match: /\]:\i.isUnsupported.+?,children:\[/,
+                match: /\]:\i.isUnsupported.{0,20}?,children:\[/,
                 replace: "$&arguments[0]?.message?.editHistory?.length>0&&$self.renderEdits(arguments[0]),"
             }
         },
@@ -788,7 +791,7 @@ export default definePlugin({
             find: "#{intl::MESSAGE_EDITED}",
             replacement: {
                 // Make edit marker clickable
-                match: /(isInline:!1,children:.+?)"span",\{(?=className:)/,
+                match: /(isInline:!1,children:.{0,50}?)"span",\{(?=className:)/,
                 replace: "$1$self.EditMarker,{message:arguments[0].message,"
             }
         },

@@ -96,7 +96,7 @@ export default definePlugin({
                     replace: "$&if($self.isCategoryIndex($1.section))return $self.renderCategory($1);"
                 },
                 {
-                    match: /"renderSection".+?"span",{/,
+                    match: /"renderSection".{0,300}?"span",{/,
                     replace: "$&...$self.makeSpanProps(),"
                 },
 
@@ -147,7 +147,7 @@ export default definePlugin({
 
         // fix alt+shift+up/down
         {
-            find: ".getFlattenedGuildIds()],",
+            find: "=()=>!1,ensureChatIsVisible:",
             replacement: {
                 match: /(?<=\i===\i\.ME\?)\i\.\i\.getPrivateChannelIds\(\)/,
                 replace: "$self.getAllUncollapsedChannels().concat($&.filter(c=>!$self.isPinned(c)))"

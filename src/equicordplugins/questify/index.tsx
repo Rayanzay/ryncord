@@ -245,12 +245,14 @@ function shouldHideMembersListActivelyPlayingIcon(): boolean {
     return disableMembersListActivelyPlayingIcon || disableQuestsEverything;
 }
 
-function QuestTileContextMenu(children: React.ReactNode[], props: { quest: any; }) {
+function QuestTileContextMenu(children: React.ReactNode[], props: { quest: any; }, isClaimedMenu: boolean = false): void {
     const isIgnored = questIsIgnored(props.quest.id);
+    const isEnrolled = !!props.quest.userStatus?.enrolledAt;
+    const canAutoComplete = !isClaimedMenu && isEnrolled && canQuestAutoComplete(props.quest);
 
     children.unshift((
         <Menu.MenuGroup>
-            {!isIgnored ? (
+            {!isClaimedMenu && (!isIgnored ? (
                 <Menu.MenuItem
                     id={q("ignore-quests")}
                     label="Mark as Ignored"
@@ -262,8 +264,8 @@ function QuestTileContextMenu(children: React.ReactNode[], props: { quest: any; 
                     label="Unmark as Ignored"
                     action={() => { removeIgnoredQuest(props.quest.id); }}
                 />
-            )}
-            {activeQuestIntervals.has(props.quest.id) &&
+            ))}
+            {activeQuestIntervals.has(props.quest.id) ? (
                 <Menu.MenuItem
                     id={q("stop-auto-complete")}
                     label="Stop Auto-Complete"
@@ -277,7 +279,12 @@ function QuestTileContextMenu(children: React.ReactNode[], props: { quest: any; 
                             rerenderQuests();
                         }
                     }}
-                />
+                />) : canAutoComplete ? (
+                    <Menu.MenuItem
+                        id={q("start-auto-complete")}
+                        label="Start Auto-Complete"
+                        action={() => { processQuestForAutoComplete(props.quest); }}
+                    />) : null
             }
             <Menu.MenuItem
                 id={q("copy-quest-id")}
@@ -558,13 +565,13 @@ function shouldPreloadQuestAssets(): boolean {
     return restyleQuestsPreload;
 }
 
-async function startVideoProgressTracking(quest: Quest, questTarget: number): Promise<void> {
+async function startVideoProgressTracking(quest: Quest, target: { raw: number; adjusted: number; }): Promise<void> {
     const questName = normalizeQuestName(quest.config.messages.questName);
     const questEnrolledAt = quest.userStatus?.enrolledAt ? new Date(quest.userStatus.enrolledAt) : null;
     const initialProgress = Math.floor(((new Date()).getTime() - (questEnrolledAt ?? new Date()).getTime()) / 1000) || 1;
     activeQuestIntervals.set(quest.id, { progressTimeout: null as any, rerenderTimeout: null as any, progress: initialProgress, type: "watch" });
     // Max up to ~25 seconds into the future can be reported.
-    const questTargetWithLeeway = questTarget - videoQuestLeeway;
+    const { raw: reportTarget, adjusted: questTargetWithLeeway } = target;
     let currentProgress = initialProgress;
     let currentProgressScaled = initialProgress;
     const timeRemaining = Math.max(0, questTargetWithLeeway - currentProgressScaled);
@@ -593,7 +600,7 @@ async function startVideoProgressTracking(quest: Quest, questTarget: number): Pr
     async function handleSendComplete() {
         clearInterval(progressIntervalId);
         clearTimeout(renderIntervalId);
-        const success = await reportVideoQuestProgress(quest, questTarget, QuestifyLogger);
+        const success = await reportVideoQuestProgress(quest, reportTarget, QuestifyLogger);
         activeQuestIntervals.delete(quest.id);
 
         if (success) {
@@ -617,7 +624,7 @@ async function startVideoProgressTracking(quest: Quest, questTarget: number): Pr
             await handleSendComplete();
         }, timeRemaining * 1000);
     } else {
-        const simulatedProgressToCover = questTarget - currentProgressScaled;
+        const simulatedProgressToCover = reportTarget - currentProgressScaled;
         const speedFactor = simulatedProgressToCover / timeRemaining;
         const progressIncrementPerInterval = reportEverySec * speedFactor;
         const numberOfIntervals = Math.floor(timeRemaining / reportEverySec);
@@ -629,9 +636,9 @@ async function startVideoProgressTracking(quest: Quest, questTarget: number): Pr
             intervalsRun++;
             currentProgress += reportEverySec;
             currentProgressScaled += progressIncrementPerInterval;
-            const progressToReport = Math.min(Math.floor(currentProgressScaled), questTarget);
+            const progressToReport = Math.min(Math.floor(currentProgressScaled), reportTarget);
 
-            if (intervalsRun < numberOfIntervals || (currentProgress < questTarget - videoQuestLeeway - (reportEverySec / 2))) {
+            if (intervalsRun < numberOfIntervals || (currentProgress < reportTarget - videoQuestLeeway - (reportEverySec / 2))) {
                 await reportVideoQuestProgress(quest, progressToReport, QuestifyLogger);
             }
 
@@ -668,10 +675,11 @@ async function startVideoProgressTracking(quest: Quest, questTarget: number): Pr
     }
 }
 
-async function startPlayGameProgressTracking(quest: Quest, questTarget: number): Promise<void> {
+async function startPlayGameProgressTracking(quest: Quest, target: { raw: number; adjusted: number; }): Promise<void> {
     const questName = normalizeQuestName(quest.config.messages.questName);
     const questEnrolledAt = quest.userStatus?.enrolledAt ? new Date(quest.userStatus.enrolledAt) : null;
     const task = getQuestTask(quest);
+    const questTarget = target.adjusted;
     const initialProgress = getQuestProgress(quest, task) || 0;
     const remaining = Math.max(0, questTarget - initialProgress);
     const heartbeatInterval = 20; // Heartbeats must be at most 2 minutes apart.
@@ -779,7 +787,7 @@ async function startPlayGameProgressTracking(quest: Quest, questTarget: number):
     }
 }
 
-async function startAchievementActivityProgressTracking(quest: Quest, questTarget: number): Promise<void> {
+async function startAchievementActivityProgressTracking(quest: Quest, target: { raw: number; adjusted: number; }): Promise<void> {
     const questName = normalizeQuestName(quest.config.messages.questName);
     const questEnrolledAt = quest.userStatus?.enrolledAt ? new Date(quest.userStatus.enrolledAt) : null;
     const achievementType = quest.config.taskConfigV2?.tasks.ACHIEVEMENT_IN_ACTIVITY;
@@ -836,7 +844,7 @@ async function startAchievementActivityProgressTracking(quest: Quest, questTarge
         return;
     }
 
-    const result = await QuestifyNative.complete(appID, authCode!, questTarget);
+    const result = await QuestifyNative.complete(appID, authCode!, target.adjusted);
     activeQuestIntervals.delete(quest.id);
 
     if (!result.success) {
@@ -857,9 +865,37 @@ async function startAchievementActivityProgressTracking(quest: Quest, questTarge
     }
 }
 
+function canQuestAutoComplete(quest: Quest): boolean {
+    const { completeVideoQuestsInBackground, completeGameQuestsInBackground, completeAchievementQuestsInBackground } = settings.store;
+
+    const task = getQuestTask(quest);
+
+    if (!task) { return false; }
+
+    const questStatus = getQuestStatus(quest);
+    const questCompleted = !!quest.userStatus?.completedAt;
+
+    if (questStatus !== QuestStatus.Unclaimed || questCompleted) {
+        return false;
+    }
+
+    const isWatch = task.type === QuestTaskType.WATCH_VIDEO || task.type === QuestTaskType.WATCH_VIDEO_ON_MOBILE;
+    const isPlay = task.type === QuestTaskType.PLAY_ON_DESKTOP || task.type === QuestTaskType.PLAY_ON_XBOX || task.type === QuestTaskType.PLAY_ON_PLAYSTATION || task.type === QuestTaskType.PLAY_ACTIVITY;
+    const isAchievement = task.type === QuestTaskType.ACHIEVEMENT_IN_ACTIVITY;
+
+    const watchTypeCompatible = isWatch && completeVideoQuestsInBackground;
+    const playTypeCompatible = isPlay && completeGameQuestsInBackground && IS_DISCORD_DESKTOP;
+    const achievementTypeCompatible = isAchievement && completeAchievementQuestsInBackground && IS_DISCORD_DESKTOP;
+
+    if (watchTypeCompatible || playTypeCompatible || achievementTypeCompatible) {
+        return true;
+    }
+
+    return false;
+}
+
 function processQuestForAutoComplete(quest: Quest): boolean {
     const questName = normalizeQuestName(quest.config.messages.questName);
-    const { completeVideoQuestsInBackground, completeGameQuestsInBackground, completeAchievementQuestsInBackground } = settings.store;
 
     const task = getQuestTask(quest);
     const questTarget = getQuestTarget(task);
@@ -868,20 +904,14 @@ function processQuestForAutoComplete(quest: Quest): boolean {
     const isWatch = task?.type === QuestTaskType.WATCH_VIDEO || task?.type === QuestTaskType.WATCH_VIDEO_ON_MOBILE;
     const isPlay = task?.type === QuestTaskType.PLAY_ON_DESKTOP || task?.type === QuestTaskType.PLAY_ON_XBOX || task?.type === QuestTaskType.PLAY_ON_PLAYSTATION || task?.type === QuestTaskType.PLAY_ACTIVITY;
     const isAchievement = task?.type === QuestTaskType.ACHIEVEMENT_IN_ACTIVITY;
-
-    const watchTypeIncompatible = isWatch && !completeVideoQuestsInBackground;
-    const playTypeIncompatible = isPlay && (!completeGameQuestsInBackground || !IS_DISCORD_DESKTOP);
-    const achievementTypeIncompatible = isAchievement && (!completeAchievementQuestsInBackground || !IS_DISCORD_DESKTOP);
+    const canAutoComplete = canQuestAutoComplete(quest);
 
     if (quest.userStatus?.completedAt || existingInterval) {
         return false;
     } else if (!task) {
         QuestifyLogger.warn(`[${getFormattedNow()}] Could not recognize the Quest type for ${questName}.`);
         return false;
-    } else if (watchTypeIncompatible || playTypeIncompatible || achievementTypeIncompatible) {
-        return false;
-    } else if (!questTarget) {
-        QuestifyLogger.warn(`[${getFormattedNow()}] Could not find target for Quest ${questName}.`);
+    } else if (!canAutoComplete) {
         return false;
     } else if (isWatch) {
         startVideoProgressTracking(quest, questTarget);
@@ -915,7 +945,7 @@ function getQuestUnacceptedButtonText(quest: Quest): string | null {
     const { completeGameQuestsInBackground, completeVideoQuestsInBackground, completeAchievementQuestsInBackground } = settings.store;
 
     const task = getQuestTask(quest);
-    const target = getQuestTarget(task);
+    const { adjusted: target } = getQuestTarget(task);
     const targetFormatted = `${String(Math.floor(target / 60)).padStart(2, "0")}:${String(target % 60).padStart(2, "0")}`;
 
     const isWatch = task?.type === QuestTaskType.WATCH_VIDEO || task?.type === QuestTaskType.WATCH_VIDEO_ON_MOBILE;
@@ -945,9 +975,9 @@ function getQuestAcceptedButtonText(quest: Quest, prepositional: boolean = false
 
     if (questEnrolledAt) {
         if (((isPlay && completeGameQuestsInBackground && IS_DISCORD_DESKTOP) || (isWatch && completeVideoQuestsInBackground))) {
-            const durationWithLeeway = getQuestTarget(task);
+            const { adjusted: durationWithLeeway } = getQuestTarget(task);
             const currentProgress = getQuestProgress(quest, task) || 0;
-            const progress = Math.min((intervalData?.progress ?? currentProgress), durationWithLeeway);
+            const progress = Math.min(currentProgress, durationWithLeeway);
             const timeRemaining = Math.max(0, durationWithLeeway - progress);
             const canCompleteImmediately = isWatch && questEnrolledAt && ((new Date().getTime() - questEnrolledAt.getTime()) / 1000) >= durationWithLeeway;
             const progressFormatted = `${String(Math.floor(timeRemaining / 60)).padStart(2, "0")}:${String(timeRemaining % 60).padStart(2, "0")}`;
@@ -979,7 +1009,7 @@ function getQuestPanelPercentComplete({ quest, percentCompleteText }: { quest: Q
 
     if (!task) { return null; }
 
-    const questTarget = getQuestTarget(task);
+    const { adjusted: questTarget } = getQuestTarget(task);
     const questProgress = getQuestProgress(quest, task);
 
     if (!questTarget || questProgress === null) { return null; }
@@ -995,31 +1025,27 @@ function getQuestPanelPercentComplete({ quest, percentCompleteText }: { quest: Q
 }
 
 function getQuestPanelSubtitleText(quest: Quest): string | null {
+    const questStatus = getQuestStatus(quest);
+    const questCompleted = !!quest.userStatus?.completedAt && questStatus === QuestStatus.Unclaimed;
     const intervalData = activeQuestIntervals.get(quest.id);
+    const rewardItem = quest.config.rewardsConfig.rewards[0] || null;
+    const completingText = getQuestAcceptedButtonText(quest, true) || "Completing";
+    const completedText = questCompleted ? "Completed" : null;
 
-    if (!intervalData) {
+    if (!intervalData && !completedText) {
         return null;
     }
 
-    const rewardItem = quest.config.rewardsConfig.rewards[0] || null;
-    const completingText = getQuestAcceptedButtonText(quest, true) || "Completing";
-
-    if (rewardItem.orbQuantity) {
-        return `${completingText} for ${rewardItem.orbQuantity} Orbs.`;
-    } else if (rewardItem.messages?.nameWithArticle) {
-        return `${completingText} for ${rewardItem.messages.nameWithArticle}.`;
+    if (rewardItem?.orbQuantity) {
+        return `${completedText || completingText} for ${rewardItem.orbQuantity} Orbs.`;
+    } else if (rewardItem?.messages?.nameWithArticle) {
+        return `${completedText || completingText} for ${rewardItem.messages.nameWithArticle}.`;
     } else {
-        return `${completingText} for an unrecognized reward.`;
+        return `${completedText || completingText} for an unrecognized reward.`;
     }
 }
 
 function getQuestPanelTitleText(quest: Quest): string | null {
-    const intervalData = activeQuestIntervals.get(quest.id);
-
-    if (!intervalData) {
-        return null;
-    }
-
     return normalizeQuestName(quest.config.messages.questName);
 }
 
@@ -1035,7 +1061,7 @@ function getQuestPanelOverride(): Quest | null {
         }
 
         const task = getQuestTask(quest);
-        const duration = getQuestTarget(task);
+        const { adjusted: duration } = getQuestTarget(task);
 
         if (!duration) {
             return;
@@ -1288,8 +1314,8 @@ export default definePlugin({
             // be completed Quest which is actively being auto-completed.
             find: "questDeliveryOverride)?",
             replacement: {
-                match: /(\i=)(\i.\i.questDeliveryOverride)/,
-                replace: "$1$self.getQuestPanelOverride()??$2"
+                match: /(?<=null}\);return )(\i\?\i:\i)/,
+                replace: "$self.getQuestPanelOverride()??($1)"
             }
         },
         {
@@ -1325,12 +1351,16 @@ export default definePlugin({
             ]
         },
         {
-            // Adds a feedback prop to the SearchableSelect component which will display on invalid searches.
+            // MARK: TODO
+            //  - Cleanup once Discord rolls out the new mana select completely.
+            //  - Also see anywhere DynamicDropdown is used for refactoring.
+            //
+            // Various patches to the SearchableSelect component.
             find: '"onSearchChange",',
             group: true,
             replacement: [
                 {
-                    // Extracts the custom dropdown prop before the variable is overwritten.
+                    // Extracts a custom feedback prop before the variable is overwritten.
                     match: /(?<=forwardRef\(function\((\i),\i\){)/,
                     replace: "const vcDynamicDropdownFeedback=$1.feedback;"
                 },
@@ -1343,8 +1373,47 @@ export default definePlugin({
                     // Makes use of the custom prop if provided, otherwise assume default behavior.
                     match: /(\i.intl.string\(\i.\i#{intl::NO_RESULTS_FOUND}\))/,
                     replace: "arguments[0]?.feedback??$1"
+                },
+                {
+                    // Prevent SearchableSelect from force-scrolling into view, causing the dropdown to close.
+                    match: /(?<=\.scrollIntoView\()/,
+                    replace: "{block:\"nearest\",inline:\"nearest\"}"
+                },
+                {
+                    // Passes a popoutClassName and optionClassName to the popout handler.
+                    match: /(?<=renderOptionPrefix:\i,renderOptionSuffix:\i)/,
+                    replace: ",popoutClassName:arguments[0]?.popoutClassName,optionClassName:arguments[0]?.optionClassName"
+                },
+                {
+                    // Makes use of the custom popoutClassName prop if provided.
+                    match: /(?<=onKeyDown"]\);return.{0,30}?className:\i\(\)\()/,
+                    replace: "arguments[0]?.popoutClassName,"
+                },
+                {
+                    // Passes the custom optionClassName prop to the row renderer.
+                    match: /(?<="aria-posinset":\i,"aria-setsize":\i.length,)/,
+                    replace: "optionClassName:arguments[0]?.optionClassName,"
+                },
+                {
+                    // Makes use of the custom optionClassName prop if provided.
+                    match: /(?<=focusProps:{enabled:!1},className:\i\(\)\()/,
+                    replace: "arguments[0]?.optionClassName,"
+                },
+                {
+                    // Pass the unused props to the new mana select being
+                    // used by dev://experiment/2025-09-mana-desktop-select
+                    match: /(?<=closeOnSelect:\i)(?=})/,
+                    replace: ",...arguments[0]"
                 }
             ]
+        },
+        {
+            // Formats the Orbs balance on the Quests page with locale string formatting.
+            find: '("BalanceCounter")',
+            replacement: {
+                match: /(?<=\i=>"".concat\(\i).toFixed\(0\)(?=\)\))/,
+                replace: ".toLocaleString(undefined,{maximumFractionDigits:0})"
+            }
         },
         {
             // Adds a maxDigits prop to the LowerBadge component which allows for not truncating, or for truncating at a specific threshold.
@@ -1490,14 +1559,18 @@ export default definePlugin({
             }
         },
         {
+            // MARK: TODO
+            //  - Cleanup once Discord rolls out the new quest CTA refactor completely.
+            //  - See new entry point in 2nd patch group below.
+            //
             // Sets intervals to progress Play Game Quests in the background and patches some common click handlers.
             find: "IN_PROGRESS:if(",
             group: true,
             replacement: [
                 {
                     // Resume Video Quest.
-                    match: /(onClick:\(\)=>)(\(0,\i.\i\)\({quest:(\i))/,
-                    replace: "$1!$self.processQuestForAutoComplete($3)&&$2"
+                    match: /(tooltipText:\i.intl.string\(\i.\i.\i\),onClick:\(\)=>)(\(0,\i.\i\)\({quest)/,
+                    replace: "$1!$self.processQuestForAutoComplete(arguments[0].quest)&&$2"
                 },
                 {
                     // Start Play Game and Play Activity Quests.
@@ -1535,6 +1608,24 @@ export default definePlugin({
                 match: /(?<=SUCCESS:)(\i\({)/,
                 replace: "!$self.processQuestForAutoComplete(arguments[0])&&$1"
             }
+        },
+        {
+            // Adds support for dev://experiment/2025-12-quest-cta-refactor-rollout
+            find: '"sm",preClickCallback:',
+            replacement: [
+                {
+                    match: /(?=let{quest:)/,
+                    replace: "const questifyText=$self.getQuestUnacceptedButtonText(arguments[0].quest);"
+                },
+                {
+                    match: /(?<="primary",onClick:\(\)=>{null==\i\|\|\i\(\),)/,
+                    replace: "!$self.processQuestForAutoComplete(arguments[0].quest)&&"
+                },
+                {
+                    match: /(?<=,text:)(?=\i)/,
+                    replace: "questifyText??"
+                }
+            ]
         },
         {
             // Sets intervals to progress Play Game Quests in the background.
