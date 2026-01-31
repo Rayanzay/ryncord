@@ -262,7 +262,7 @@ export default definePlugin({
             buildEntry({
                 key: "equicord_cloud",
                 title: "Cloud",
-                panelTitle: "Equicord Cloud",
+                panelTitle: "ryncord Cloud",
                 Component: CloudTab,
                 Icon: CloudIcon
             }),
@@ -284,7 +284,7 @@ export default definePlugin({
         const equicordSection: SettingsLayoutNode = {
             key: "equicord_section",
             type: LayoutTypes.SECTION,
-            useTitle: () => "Equicord Settings",
+            useTitle: () => "ryncord Settings",
             buildLayout: () => equicordEntries
         };
 
