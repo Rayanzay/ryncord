@@ -93,7 +93,7 @@ const settings = definePluginSettings({
     watermark: {
         type: OptionType.STRING,
         description: "Custom watermark text (max 32 characters)",
-        default: "Made with Equicord"
+        default: "Made with sarcasm"
     },
     grayscale: {
         type: OptionType.BOOLEAN,
@@ -110,7 +110,7 @@ const settings = definePluginSettings({
     saveAsGif: {
         type: OptionType.BOOLEAN,
         description: "Save as GIF by default",
-        default: false,
+        default: true,
         hidden: true
     }
 });
