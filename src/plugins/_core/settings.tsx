@@ -18,7 +18,6 @@ import {
 } from "@components/settings";
 import { gitHashShort } from "@shared/vencordUserAgent";
 import { Devs } from "@utils/constants";
-import { getIntlMessage } from "@utils/discord";
 import { isTruthy } from "@utils/guards";
 import definePlugin, { IconProps, OptionType } from "@utils/types";
 import { findByPropsLazy } from "@webpack";
@@ -104,7 +103,7 @@ const settings = definePluginSettings({
     }
 });
 
-export const settingsSectionMap: [string, string][] = [
+const settingsSectionMap: [string, string][] = [
     ["EquicordSettings", "equicord_main_panel"],
     ["EquicordPlugins", "equicord_plugins_panel"],
     ["EquicordThemes", "equicord_themes_panel"],
@@ -123,6 +122,7 @@ export default definePlugin({
     required: true,
 
     settings,
+    settingsSectionMap,
 
     patches: [
         {
@@ -151,21 +151,6 @@ export default definePlugin({
                     replace: "$& + $self.getInfoString()"
                 }
             ]
-        },
-        {
-            find: ".SEARCH_NO_RESULTS&&0===",
-            replacement: [
-                {
-                    match: /(?<=section:(.{0,50})\.DIVIDER\}\))([,;])(?=.{0,200}(\i)\.push.{0,100}label:(\i)\.header)/,
-                    replace: (_, sectionTypes, commaOrSemi, elements, element) =>
-                        `${commaOrSemi} $self.addSettings(${elements}, ${element}, ${sectionTypes}) ${commaOrSemi}`,
-                },
-                {
-                    match: /({(?=.+?function (\i).{0,160}(\i)=\i\.useMemo.{0,140}return \i\.useMemo\(\(\)=>\i\(\3).+?\(\)=>)\2/,
-                    replace: (_, rest, settingsHook) =>
-                        `${rest}$self.wrapSettingsHook(${settingsHook})`,
-                },
-            ],
         },
         {
             find: "#{intl::USER_SETTINGS_ACTIONS_MENU_LABEL}",
@@ -320,13 +305,12 @@ export default definePlugin({
         return [
             {
                 section: SectionTypes.HEADER,
-                label: "ryncord",
-                className: "vc-settings-header"
+                label: "Equicord",
+                className: "vc-settings-header",
             },
             {
                 section: "EquicordSettings",
-                label: "ryncord",
-                searchableTitles: ["ryncord", "Settings", "ryncord Settings"],
+                label: "Equicord",
                 element: VencordTab,
                 className: "vc-settings",
             },
@@ -360,7 +344,7 @@ export default definePlugin({
             },
             {
                 section: "EquicordCloud",
-                label: "Vencord Cloud",
+                label: "Cloud",
                 searchableTitles: ["Cloud"],
                 element: CloudTab,
                 className: "vc-cloud",
