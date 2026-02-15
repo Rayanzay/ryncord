@@ -190,6 +190,14 @@ function hasDuckEmoji(message: string) {
 let ultraQueue: (() => void)[] = [];
 let ultraPlaying = false;
 
+// Expose clearQueue function for SoundStopper plugin
+(window as any).__moyaiPlugin = {
+    clearQueue: () => {
+        ultraQueue = [];
+        ultraPlaying = false;
+    }
+};
+
 async function playUltraBoom(audioElement: HTMLAudioElement) {
     ultraPlaying = true;
     await new Promise<void>((resolve) => {
