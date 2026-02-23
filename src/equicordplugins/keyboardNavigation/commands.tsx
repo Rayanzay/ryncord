@@ -35,7 +35,7 @@ export const actions: ButtonAction[] = [
     { id: "restartClient", label: "Restart Client", callback: () => relaunch(), registrar: "Equicord" },
     { id: "openQuickCSSFile", label: "Open Quick CSS File", callback: () => VencordNative.quickCss.openEditor(), registrar: "Equicord" },
     { id: "openSettingsFolder", label: "Open Settings Folder", callback: async () => showItemInFolder(await VencordNative.settings.getSettingsDir()), registrar: "Equicord" },
-    { id: "openInGithub", label: "Open in Github", callback: async () => VencordNative.native.openExternal(await getRepo()), registrar: "Equicord" },
+    { id: "openInGithub", label: "Open in GitHub", callback: async () => VencordNative.native.openExternal(await getRepo()), registrar: "Equicord" },
 
     {
         id: "openInBrowser", label: "Open in Browser", callback: async () => {

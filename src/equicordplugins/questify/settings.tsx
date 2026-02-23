@@ -1694,7 +1694,7 @@ export const settings = definePluginSettings({
     completeVideoQuestsInBackground: {
         type: OptionType.BOOLEAN,
         description: "Complete Video Quests in the background after the video duration has passed.",
-        default: false,
+        default: true,
         hidden: true,
         onChange: (value: boolean) => {
             if (!value) {
@@ -1713,7 +1713,7 @@ export const settings = definePluginSettings({
     completeGameQuestsInBackground: {
         type: OptionType.BOOLEAN,
         description: "Complete Game Quests in the background after the game duration has passed.",
-        default: false,
+        default: true,
         hidden: true,
         onChange: (value: boolean) => {
             if (!value) {
@@ -1732,7 +1732,7 @@ export const settings = definePluginSettings({
     completeAchievementQuestsInBackground: {
         type: OptionType.BOOLEAN,
         description: "Complete Achievement in Activity Quests in the background.",
-        default: false,
+        default: true,
         hidden: true,
         onChange: (value: boolean) => {
             if (!value) {

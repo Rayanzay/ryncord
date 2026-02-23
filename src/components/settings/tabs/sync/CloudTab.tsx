@@ -98,9 +98,8 @@ function CloudTab() {
             </Paragraph>
 
             <Notice.Info className={Margins.bottom16}>
-                We use the <Link href="https://github.com/Equicord/Equicloud">Equicloud backend</Link> with enhanced features.
-                View their <Link href="https://equicord.org/cloud/policy">privacy policy</Link> to see what we store and how we use your data.
-                Equicloud is BSD 3.0 licensed, so you can self-host if preferred.
+                ryncord (borrows) the <Link href="https://github.com/Equicord/Equicloud">Equicloud backend</Link> with enhanced features.
+                View their <Link href="https://equicord.org/cloud/policy">privacy policy</Link> to see what they store and how we use your data, but I don't think you care.
             </Notice.Info>
 
             <FormSwitch

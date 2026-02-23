@@ -9,7 +9,7 @@ import { isPluginEnabled, plugins, startPlugin, stopPlugin } from "@api/PluginMa
 import { SettingsStore } from "@api/Settings";
 import { getUserSettingLazy } from "@api/UserSettings";
 import { openPluginModal } from "@components/settings/tabs";
-import { toggleEnabled } from "@equicordplugins/equicordHelper/utils";
+import { toggleEnabled } from "@equicordplugins/EquicordHelper/utils";
 import type { Plugin } from "@utils/types";
 import { changes, checkForUpdates } from "@utils/updater";
 import { Guild } from "@vencord/discord-types";
@@ -1202,12 +1202,12 @@ const BUILT_IN_CATEGORIES: CommandCategory[] = [
     {
         id: DEFAULT_CATEGORY_ID,
         label: "Quick Actions",
-        description: "Common Equicord shortcuts"
+        description: "Common ryncord shortcuts"
     },
     {
         id: "plugins",
         label: "Plugins",
-        description: "Manage Equicord and Vencord plugins"
+        description: "Manage ryncord and Vencord plugins"
     },
     {
         id: CONTEXT_PROVIDER_ID,
@@ -1247,7 +1247,7 @@ const BUILT_IN_CATEGORIES: CommandCategory[] = [
     {
         id: "updates",
         label: "Updates",
-        description: "Stay up to date with Equicord"
+        description: "Stay up to date with ryncord"
     },
     {
         id: "discord-settings",
@@ -1665,7 +1665,7 @@ function registerUpdateCommands() {
     registerCommand({
         id: "check-for-updates",
         label: "Check for Updates",
-        description: "Checks for Equicord updates",
+        description: "Checks for ryncord updates",
         keywords: ["updates", "check", "updater"],
         categoryId: "updates",
         tags: [TAG_DEVELOPER, TAG_UTILITY],
@@ -1688,7 +1688,7 @@ function registerUpdateCommands() {
     registerCommand({
         id: "open-changelog",
         label: "View Changelog",
-        description: "Opens the Equicord changelog",
+        description: "Opens the ryncord changelog",
         keywords: ["updates", "changelog"],
         categoryId: "updates",
         tags: [TAG_DEVELOPER, TAG_NAVIGATION],
@@ -2589,7 +2589,7 @@ function registerPluginChangeCommands() {
 
     registerCommand({
         id: "restart-equicord",
-        label: "Restart Equicord",
+        label: "Restart ryncord",
         description: "Reloads the Discord client window",
         keywords: ["restart", "reload"],
         categoryId: "plugins-changes",

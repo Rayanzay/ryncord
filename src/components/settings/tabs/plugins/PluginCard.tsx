@@ -99,8 +99,8 @@ export function PluginCard({ plugin, disabled, onRestartNeeded, onMouseEnter, on
         {
             condition: isEquicordPlugin,
             src: "https://equicord.org/assets/icons/equicord/icon.png",
-            alt: "Equicord",
-            title: "Equicord Plugin"
+            alt: "ryncord",
+            title: "ryncord Plugin"
         },
         {
             condition: isVencordPlugin,

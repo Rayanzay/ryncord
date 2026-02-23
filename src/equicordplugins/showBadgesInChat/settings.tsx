@@ -24,7 +24,7 @@ const settings = definePluginSettings({
     },
     showEquicordContributor: {
         type: OptionType.BOOLEAN,
-        description: "Enable to show Equicord Contributor badges in chat.",
+        description: "Enable to show ryncord Contributor badges in chat.",
         hidden: true,
         default: true
     },

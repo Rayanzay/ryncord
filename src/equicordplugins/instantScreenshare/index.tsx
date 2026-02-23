@@ -58,7 +58,7 @@ export default definePlugin({
     name: "InstantScreenshare",
     description: "Instantly screenshare when joining a voice channel with support for desktop sources, windows, and video input devices (cameras, capture cards)",
     authors: [Devs.HAHALOSAH, Devs.thororen, EquicordDevs.mart],
-    dependencies: ["EquicordToolbox"],
+    dependencies: ["ryncordToolbox"],
     tags: ["ScreenshareKeybind"],
     autoStartStream,
     settings,

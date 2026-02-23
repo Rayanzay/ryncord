@@ -18,7 +18,7 @@ export const settings = definePluginSettings({
 });
 
 export default definePlugin({
-    name: "EquicordToolbox",
+    name: "ryncordToolbox",
     description: "Provides a plugin list entry in the context menu.",
     authors: [Devs.Ven],
     settings,
