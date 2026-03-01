@@ -9,7 +9,7 @@ import { isPluginEnabled, plugins, startPlugin, stopPlugin } from "@api/PluginMa
 import { SettingsStore } from "@api/Settings";
 import { getUserSettingLazy } from "@api/UserSettings";
 import { openPluginModal } from "@components/settings/tabs";
-import { toggleEnabled } from "@equicordplugins/EquicordHelper/utils";
+import { toggleEnabled } from "@equicordplugins/equicordHelper/utils";
 import type { Plugin } from "@utils/types";
 import { changes, checkForUpdates } from "@utils/updater";
 import { Guild } from "@vencord/discord-types";
