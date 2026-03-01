@@ -234,7 +234,7 @@ export default definePlugin({
             !IS_UPDATER_DISABLED && UpdaterTab && buildEntry({
                 key: "equicord_updater",
                 title: "Updater",
-                panelTitle: "Equicord Updater",
+                panelTitle: "ryncord Updater",
                 Component: UpdaterTab,
                 Icon: UpdaterIcon
             }),
@@ -305,12 +305,12 @@ export default definePlugin({
         return [
             {
                 section: SectionTypes.HEADER,
-                label: "Equicord",
+                label: "ryncord",
                 className: "vc-settings-header",
             },
             {
                 section: "EquicordSettings",
-                label: "Equicord",
+                label: "ryncord",
                 element: VencordTab,
                 className: "vc-settings",
             },
