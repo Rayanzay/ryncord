@@ -30,7 +30,7 @@ import { ContextMenuApi, Menu, Toasts, UserStore } from "@webpack/common";
 
 import Plugins, { PluginMeta } from "~plugins";
 
-import { EquicordDonorModal, VencordDonorModal } from "./modals";
+import { EquicordDonorModal, EquicordTranslatorModal, VencordDonorModal } from "./modals";
 
 const CONTRIBUTOR_BADGE = "https://blog-v2-46u.pages.dev/favicon.png";
 const EQUICORD_CONTRIBUTOR_BADGE = "https://blog-v2-46u.pages.dev/favicon.png";
@@ -137,7 +137,7 @@ export default definePlugin({
                     replace: "...$1.props,$&"
                 },
                 {
-                    match: /(?<=forceOpen:.{0,40}?\i\((\i)\.id\).{0,100}?)children:/,
+                    match: /(?<=__unsupportedReactNodeAsText:\i,forceOpen:.{0,70}?)children:(?=.{0,5}\$\{(\i)\.id\})/,
                     replace: "children:$1.component?$self.renderBadgeComponent({...$1}) :"
                 },
                 // handle onClick and onContextMenu
@@ -252,7 +252,7 @@ export default definePlugin({
                 ContextMenuApi.openContextMenu(event, () => <BadgeContextMenu badge={badge} />);
             },
             onClick() {
-                return EquicordDonorModal();
+                return badge.tooltip === "Equicord Translator" ? EquicordTranslatorModal() : EquicordDonorModal();
             },
         } satisfies ProfileBadge));
     }
