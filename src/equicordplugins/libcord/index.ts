@@ -20,7 +20,7 @@ import { Devs } from "@utils/constants";
 import { sleep } from "@utils/misc";
 import definePlugin from "@utils/types";
 import { RelationshipStore, SelectedChannelStore, UserStore } from "@webpack/common";
-import { Message, ReactionEmoji } from "discord-types/general";
+import type { Message, ReactionEmoji } from "@vencord/discord-types";
 
 interface IMessageCreate {
     type: "MESSAGE_CREATE";
